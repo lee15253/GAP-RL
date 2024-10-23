@@ -1,0 +1,28 @@
+device: cuda:0
+group_center_cat: False
+max_steps: 100
+test_num: 20
+eval_steps: [2000000]
+train_procs: 4
+eval_procs: 1
+
+robot_id: ur5e_robotiq85_old
+robot_init_qpos_noise: 0.05
+shader_dir: ibl
+num_grasps: 40
+num_grasp_points: 20
+grasp_points_mode: gauss  # not used
+obj_init_rot_z: True
+obj_init_rot: 0.0
+goal_thresh: 0.25
+robot_x_offset: 0.56
+gen_traj_mode: bezier2d
+vary_speed: True
+obs_mode: state_objpoints_rt
+control_mode: pd_ee_delta_pose_euler
+reward_mode: dense
+sim_freq: 150
+control_freq: 5
+goal_aux: True
+share_feat: False
+grasp_select_mode: near4  # angle_filter, nearest, random, near4, near4_filter

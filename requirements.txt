@@ -1,0 +1,40 @@
+# core
+## gym 0.21.0 need pip install setuptools==65.5.0 "wheel<0.40.0"
+numpy==1.23
+scipy
+gym==0.21.0
+sapien==2.2.2
+mplib
+
+# basic
+h5py
+pyyaml
+tqdm
+# utilties
+GitPython
+tabulate
+gdown>=4.6.0
+# vision
+transforms3d
+opencv-python
+imageio
+imageio[ffmpeg]
+trimesh
+rtree
+stable_baselines3==1.8.0
+tensorboard
+open3d
+
+# localgrasp
+torch==1.13.1+cu117
+torchvision==0.14.1+cu117
+numba
+cupoch
+scikit-image
+tensorboardX
+torchsummary
+--extra-index-url https://download.pytorch.org/whl/cu117
+# graspnetAPI  # install indenpendently
+# pytorch3d  # install indenpendently
+fvcore
+# pip install --no-index --no-cache-dir pytorch3d -f https://dl.fbaipublicfiles.com/pytorch3d/packaging/wheels/py39_cu117_pyt1131/download.html

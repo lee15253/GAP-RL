@@ -1,0 +1,20 @@
+ycb_train:
+  model_ids: [003_cracker_box, 005_tomato_soup_can, 010_potted_meat_can, 057_racquetball,
+              006_mustard_bottle, 024_bowl, 025_mug, 072-b_toy_airplane,
+              011_banana, 014_lemon, 043_phillips_screwdriver, 072-d_toy_airplane]
+  env_id: PickSingleYCB-v0
+ycb_eval:
+  model_ids: [002_master_chef_can, 008_pudding_box, 012_strawberry, 013_apple, 015_peach,
+              033_spatula, 035_power_drill, 054_softball, 063-a_marbles, 070-a_colored_wood_blocks]
+  env_id: PickSingleYCB-v3
+graspnet_eval:
+  model_ids: ['035', '038', '041', '043', '046',
+              '048', '055', '057', '063', '070']
+  env_id: PickSingleGraspnet-v0
+acronym_eval:
+  model_ids: [Basket, BeerBottle, Bowl, Bucket, Camera0,
+              Flashlight, Hammer, Headphones1, Mug0, PillBottle]
+  env_id: PickSingleACRONYM-v0
+egad_eval:
+  model_ids: [A0, A3, A6, C0, C3, C6, E0, E3, E6]
+  env_id: PickSingleEGAD-v0
