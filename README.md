@@ -30,7 +30,7 @@ Our framework combines a LocalGrasp model for fast and object-centric grasp dete
 
 # Simulation Settings
 <p>
-<img src=./img/DynamicSettings.png align="center" width=800 />
+<img src=./img/DynamicSettings.png align="center" width=600 />
 </p>
 
 **Visualization Demo**: You can run the following code to visualize the trajectories 
