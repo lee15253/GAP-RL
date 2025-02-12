@@ -23,8 +23,7 @@ from gap_rl.utils.wrappers.observation import StackObservationWrapper, DictObser
 from gap_rl.utils.wrappers.record import RecordEpisode
 from gap_rl.utils.trimesh_utils import get_articulation_meshes, merge_meshes
 from gap_rl.utils.o3d_utils import draw_o3d_geometries
-from gap_rl.localgrasp.localgrasp_init import LgNet, lg_parse
-from gap_rl.localgrasp.dataset.grasp import GraspGroup as OurGraspGroup
+from gap_rl.localgrasp.LoG import lg_parse, LgNet, GraspGroup
 
 from stable_baselines3 import SAC
 
@@ -48,7 +47,7 @@ def gen_grasps(env, lgNet):
     scene_points_ee, obj_points_ee = env.get_objpoints_rt()
     if obj_points_ee.shape[0] < 64:
         # print('too few object points')
-        return torch.zeros((0, 6)), torch.zeros((0, 6)), OurGraspGroup(), OurGraspGroup()
+        return torch.zeros((0, 6)), torch.zeros((0, 6)), GraspGroup(), GraspGroup()
 
     # scale points
     scale = 1.0

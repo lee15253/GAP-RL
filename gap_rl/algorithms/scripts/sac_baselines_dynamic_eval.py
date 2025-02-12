@@ -11,7 +11,7 @@ import pickle
 from collections import OrderedDict
 
 from gap_rl.envs import *
-from gap_rl import LOCALGRASP_DIR, ASSET_DIR, ALGORITHM_DIR
+from gap_rl import ASSET_DIR, ALGORITHM_DIR
 from gap_rl.utils.common import setup_seed
 from gap_rl.utils.wrappers.common import NormalizeBoxActionWrapper
 from gap_rl.utils.wrappers.observation import StackObservationWrapper, DictObservationStack

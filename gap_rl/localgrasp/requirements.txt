@@ -1,0 +1,10 @@
+# python==3.9
+--find-links https://download.pytorch.org/whl/torch_stable.html
+graspnetAPI
+numpy==1.23
+numba
+cupoch
+torch==1.13.1+cu117
+torchvision==0.14.1+cu117
+# pytorch3d  # Building / installing from source.
+# pointnet2_ops_lib  # Compiling from https://github.com/ma-xu/pointMLP-pytorch
