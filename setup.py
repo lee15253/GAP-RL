@@ -11,6 +11,7 @@ def read_requirements():
 setup(
     name="gap_rl",
     version="0.1.0",
+    packages=find_packages(include=["gap_rl", "gap_rl.*"]),
     description="GAP-RL: Grasps As Points for RL Towards Dynamic Object Grasping",
     author="THU-RoboLab",
     python_requires=">=3.8",

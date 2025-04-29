@@ -56,6 +56,10 @@ if __name__ == "__main__":
     is_goal_aux = cfg.get("goal_aux", False)
     share_feat = cfg.get("share_feat", True)
 
+    # FIXME: 디버깅
+    cfg['train_procs'] = 1
+
+
     env_cfg_file = ALGORITHM_DIR / f"config/env_settings.yaml"
     with open(env_cfg_file, "r", encoding="utf-8") as fin:
         env_cfg = yaml.load(fin, Loader=yaml.FullLoader)
@@ -78,37 +82,70 @@ if __name__ == "__main__":
     with open(log_dir + "/config.yaml", "w", encoding="utf-8") as file:
         yaml.dump(cfg, file)
 
-    vec_env = SubprocVecEnv(
-        [
-            sb3_make_multienv(
-                env_id=env_id,
-                robot_id=cfg["robot_id"],
-                robot_init_qpos_noise=cfg["robot_init_qpos_noise"],
-                shader_dir=cfg["shader_dir"],
-                model_ids=model_ids,
-                num_grasps=cfg["num_grasps"],
-                num_grasp_points=cfg["num_grasp_points"],
-                grasp_points_mode=cfg["grasp_points_mode"],
-                obj_init_rot_z=cfg["obj_init_rot_z"],
-                obj_init_rot=cfg["obj_init_rot"],
-                goal_thresh=cfg["goal_thresh"],
-                robot_x_offset=cfg["robot_x_offset"],
-                gen_traj_mode=cfg["gen_traj_mode"],
-                vary_speed=cfg["vary_speed"],
-                grasp_select_mode=cfg["grasp_select_mode"],
-                obs_mode=cfg["obs_mode"],
-                control_mode=cfg["control_mode"],
-                reward_mode=cfg["reward_mode"],
-                sim_freq=cfg["sim_freq"],
-                control_freq=cfg["control_freq"],
-                device=cfg["device"],
-                rank=i,
-                seed=seed,
-            )
-            for i in range(cfg["train_procs"])
-        ],
-        start_method="spawn",
+
+
+
+    from stable_baselines3.common.vec_env import DummyVecEnv
+    env = sb3_make_multienv(
+        env_id=env_id,
+        robot_id=cfg["robot_id"],
+        robot_init_qpos_noise=cfg["robot_init_qpos_noise"],
+        shader_dir=cfg["shader_dir"],
+        model_ids=model_ids,
+        num_grasps=cfg["num_grasps"],
+        num_grasp_points=cfg["num_grasp_points"],
+        grasp_points_mode=cfg["grasp_points_mode"],
+        obj_init_rot_z=cfg["obj_init_rot_z"],
+        obj_init_rot=cfg["obj_init_rot"],
+        goal_thresh=cfg["goal_thresh"],
+        robot_x_offset=cfg["robot_x_offset"],
+        gen_traj_mode=cfg["gen_traj_mode"],
+        vary_speed=cfg["vary_speed"],
+        grasp_select_mode=cfg["grasp_select_mode"],
+        obs_mode=cfg["obs_mode"],
+        control_mode=cfg["control_mode"],
+        reward_mode=cfg["reward_mode"],
+        sim_freq=cfg["sim_freq"],
+        control_freq=cfg["control_freq"],
+        device=cfg["device"],
+        rank=0,
+        seed=seed,
     )
+
+    vec_env = DummyVecEnv([env])
+
+
+    # vec_env = SubprocVecEnv(
+    #     [
+    #         sb3_make_multienv(
+    #             env_id=env_id,
+    #             robot_id=cfg["robot_id"],
+    #             robot_init_qpos_noise=cfg["robot_init_qpos_noise"],
+    #             shader_dir=cfg["shader_dir"],
+    #             model_ids=model_ids,
+    #             num_grasps=cfg["num_grasps"],
+    #             num_grasp_points=cfg["num_grasp_points"],
+    #             grasp_points_mode=cfg["grasp_points_mode"],
+    #             obj_init_rot_z=cfg["obj_init_rot_z"],
+    #             obj_init_rot=cfg["obj_init_rot"],
+    #             goal_thresh=cfg["goal_thresh"],
+    #             robot_x_offset=cfg["robot_x_offset"],
+    #             gen_traj_mode=cfg["gen_traj_mode"],
+    #             vary_speed=cfg["vary_speed"],
+    #             grasp_select_mode=cfg["grasp_select_mode"],
+    #             obs_mode=cfg["obs_mode"],
+    #             control_mode=cfg["control_mode"],
+    #             reward_mode=cfg["reward_mode"],
+    #             sim_freq=cfg["sim_freq"],
+    #             control_freq=cfg["control_freq"],
+    #             device=cfg["device"],
+    #             rank=i,
+    #             seed=seed,
+    #         )
+    #         for i in range(cfg["train_procs"])
+    #     ],
+    #     start_method="spawn",
+    # )
     vec_env = VecMonitor(vec_env, log_dir)
 
     for obs_key, box_space in vec_env.observation_space.items():
@@ -238,6 +275,7 @@ if __name__ == "__main__":
                 for num in tqdm(
                     range(cfg["test_num"]), desc=f"Processing {eval_step / 1000000}M", colour="green", leave=True
                 ):
+                    
                     obs = record_env.reset(model_id=model_id)
                     epi_seed = record_env.unwrapped._episode_seed
                     success_flag = False

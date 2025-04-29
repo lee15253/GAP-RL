@@ -504,31 +504,18 @@ class Sim2Real:
         else:
             return pc_base, obj_points_base, centers_base.cpu().numpy(), scene_points_ee, obj_points_ee, centers_ee.cpu().numpy(), pred_gg_ee
 
-
     def track_grasps(self, prev_gg_ee, trans_ee2base):
         t = time.time()
-
-
-        # Algorithm require: P_c^t-1 획득
-        # ee 좌표계 -> 로봇 base 좌표계
         trans_ee2base_tensor = torch.from_numpy(trans_ee2base).float().cuda()
-        # base -> ee
         trans_base2ee_tensor = torch.linalg.inv(trans_ee2base_tensor)
-        # camera -> ee
         trans_hand2ee_tensor = self.handCam_to_ees[self.cam_id]
 
-        # 이전 grasp 결과: EE좌표계 -> base 좌표계
         prev_gg_trans_base = transform_points(trans_ee2base_tensor, torch.from_numpy(prev_gg_ee.translations).float().cuda())
-        # z축 높이로 바닥 필터링
         prev_gg_trans_base = prev_gg_trans_base[prev_gg_trans_base[:, 2] > self.object_ws[2][0]]
-        # 서로 거리가 먼 점들을 K개 샘플링 => prev center라고 여김 (P_c^t-1)
-        # TODO: 여기가 헷갈리네. 왜 previous center를 "sample" 하지?
         prev_gg_centers_base_tensor = sample_farthest_points(prev_gg_trans_base[None], K=self.args.num_centers[0])[0].squeeze()
         # prev_gg_centers_ee = transform_points(trans_base2ee_tensor, prev_gg_centers_base_tensor)
         print("get centers time: ", time.time() - t)
 
-
-        # Algorithm require: 카메라 포인트 클라우드 획득 (P^t)
         t = time.time()
         if self.args.save_rgb:
             hand_points, hand_rgb, hand_depth = self.hand_cams[self.cam_id].get_image_pointcloud(color_depth=False)
@@ -538,41 +525,20 @@ class Sim2Real:
         # print('hand points shape:', hand_points.shape)
         print("get point cloud time: ", time.time() - t)
 
-
         t = time.time()
-        # P^t: 카메라좌표계 => EE좌표계
         scene_points_ee_tensor = transform_points(trans_hand2ee_tensor, hand_points_tensor)
-        # P^t: EE좌표계 => base좌표계
         scene_points_base_tensor = transform_points(trans_ee2base_tensor, scene_points_ee_tensor)
         scene_points_base = scene_points_base_tensor.cpu().numpy()
 
-
         ## filtered object points
-        # 작업범위 아닌곳 필터링
         scene_points_base_tensor, mask = pointcloud_filter(scene_points_base_tensor, self.args.ground_ws, cuda=True)
-
-
-        # Algorithm line 5
-        # line6을 보면, center 후보군은 (1) t초의 PCL 중 이전 grasp 위치에서 가까운 point들을 중 N_o개 샘플링 +
-        # (2) t초의 PCL 에서 그냥 N_c개 샘플링 (얘가 더 넓은 범위에서 샘플링)
-        # 밑의 add_centers_base_tensor가 N_c개 샘플링하는 과정
-        # 추가적으로 더 좁은 범위인 물체(object)가 있을 것으로 예상되는 공간 필터링
         object_points_base_tensor, mask = pointcloud_filter(scene_points_base_tensor, self.object_ws, cuda=True)
-        # object_points: base 좌표 -> EE 좌표
         object_points_ee_tensor = transform_points(trans_base2ee_tensor, object_points_base_tensor)
         obj_points_base, obj_points_ee = object_points_base_tensor.cpu().numpy(), object_points_ee_tensor.cpu().numpy()
-        # object_pionts 중에서 FPS로 K개 샘플링 -> 아마 complement center로 활용하는듯? (gpt)
         add_centers_base_tensor = sample_farthest_points(object_points_base_tensor[None], K=self.args.num_centers[1])[0].squeeze()  # (nc, 3)
         # add_centers_ee_tensor = transform_points(trans_base2ee_tensor, add_centers_base_tensor)
         print("filtered time: ", time.time() - t)
 
-
-        # Algorithm line 2
-        # Ball query => p1을 중심으로 원을 그림
-        # 그 공 안에 있는 포인트(p2의 점)를 K개 찾음.
-        # 즉, 이전 grasp의 center 주변의 '현재 프레임 포인트 클라우드'를 찾는다.
-        # 즉, t-1의 graspable한 위치에서 멀리 떨어지지 않은, t의 PCL을 찾는다.
-        # Summary: Input:p1=P_c^t-1, p2=P^t (line 2) // Output: P_i^t
         t = time.time()
         ## nk ball_query points group => fps(64)
         print(prev_gg_centers_base_tensor.shape, scene_points_base_tensor.shape)
@@ -588,33 +554,20 @@ class Sim2Real:
         print("origin shape: ", track_region_points_base_tensor.shape)
         track_region_points_base_tensor = torch.unique(track_region_points_base_tensor, dim=0)
         print("processing shape: ", track_region_points_base_tensor.shape)
-
-
-        # Algorithm line 3: ball_query의 output들 바닥이네 물체 workspace 아래에 존재하는 노이즈를 필터링한다
         ## ground filter
         g_filter = track_region_points_base_tensor[:, 2] > self.object_ws[2][0]
         track_region_points_base_tensor = track_region_points_base_tensor[g_filter]
-
-
-        # Algorithm line 4: P_o^t 획득 (line 3의 filtered output들 중 graspable한 것들을 sampling한다)
-        # FPS: 포인트 클라우드의 모양(shape)을 잘 나타내는 대표 지점들을 샘플링 (좋은 후보군들을 추출하는 기능)
         try:
             track_centers_base_tensor = sample_farthest_points(track_region_points_base_tensor[None], K=self.args.num_centers[0])[0].squeeze()  # (nc, 3)
         except:
             breakpoint()
         print("BQ & FPS time: ", time.time() - t)
 
-
         t = time.time()
         # track_centers_ee_tensor = transform_points(trans_base2ee_tensor, track_centers_base_tensor)
 
-
-        # Algorithm line 6: P^t_complete와 P^t_target concat
         update_centers_base_tensor = torch.cat((add_centers_base_tensor, track_centers_base_tensor), dim=0)
         print("== ", update_centers_base_tensor.shape)
-
-
-        # 아마도 algorithm line 7. clustering 알고리즘으로, 가장 큰 cluster (cluster_labels == 0)만 남김. 즉 noise 제거의 효과.
         ## cluster centers to remove noisy centers
         centers_pcd = o3d.geometry.PointCloud()
         centers_pcd.points = o3d.utility.Vector3dVector(update_centers_base_tensor.cpu().numpy())
@@ -622,9 +575,6 @@ class Sim2Real:
         update_centers_base_tensor = update_centers_base_tensor[cluster_labels == 0]
         print("== ", update_centers_base_tensor.shape)
         print("DBCluster time: ", time.time() - t)
-
-
-
 
         ## filter outliers
         # dists, idx, nn = ball_query(
@@ -636,11 +586,7 @@ class Sim2Real:
         # update_centers_base_tensor = update_centers_base_tensor[((dists[0] > 0).sum(dim=1)) > 11]
 
         # update_centers_ee_tensor = torch.cat((add_centers_ee_tensor, track_centers_ee_tensor), dim=0)
-
-
-        # 위는 다 base frame에서 계산함. 실제 grasp 수행 시 EE frame로 할거라, base->ee 변환 해야함.
         update_centers_ee_tensor = transform_points(trans_base2ee_tensor, update_centers_base_tensor)
-
         scene_points_ee = scene_points_ee_tensor.cpu().numpy()
         update_centers_ee = update_centers_ee_tensor.cpu().numpy()
         update_centers_base = update_centers_base_tensor.cpu().numpy()
@@ -656,25 +602,10 @@ class Sim2Real:
 
         # print("center computation time: ", time.time() - t)
         t = time.time()
-
-
-        # Section 4-C: grasp detection. 
-        # Use Local Grasp 모델. 
-        # scene_points: P^t (ee frame): EE 입장에서 본 scene
-        # centers: \hat{P_c^t} (ee frame): 위 과정에서 구한 grasp 위치 후보
-        # pred_gg_ee => 후보 각각의 위치 (translation), 방향 (rotation), 품질 점수 (scores) 등을 나타냄
-
-        # https://arxiv.org/pdf/2403.15054v1 논문을 잠깐 봤는데도, 좀 헷가리넹
-
         pred_gg_ee = self.lgNet.infer_from_centers(
             scene_points=scene_points_ee_tensor,
             centers=update_centers_ee_tensor
         )
-
-
-
-
-
         # print('nms filtered grasps number:', pred_gg_ee.size)
 
         # visualize the grasps

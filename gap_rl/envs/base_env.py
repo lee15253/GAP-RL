@@ -175,8 +175,14 @@ class BaseEnv(gym.Env):
 
         # Use a fixed seed to initialize to enhance determinism
         self.seed(1029)
+
         obs = self.reset(reconfigure=True)
+        # BK fix
+        if isinstance(obs, tuple):  # gym >=0.26 대응
+            obs = obs[0]
+
         self.observation_space = convert_observation_to_space(obs)
+
         self.action_space = self.agent.action_space
 
     def seed(self, seed=None):

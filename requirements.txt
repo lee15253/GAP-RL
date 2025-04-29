@@ -2,7 +2,7 @@
 ## gym 0.21.0 need pip install setuptools==65.5.0 "wheel<0.40.0"
 numpy==1.23
 scipy
-gym==0.21.0
+# gym==0.21.0
 sapien==2.2.2
 mplib
 
@@ -21,13 +21,13 @@ imageio
 imageio[ffmpeg]
 trimesh
 rtree
-stable_baselines3==1.8.0
+# stable_baselines3==1.8.0
 tensorboard
 open3d
 
 # localgrasp
-torch==1.13.1+cu117
-torchvision==0.14.1+cu117
+# torch==1.13.1+cu117
+# torchvision==0.14.1+cu117
 numba
 cupoch
 scikit-image

@@ -296,7 +296,9 @@ class PickSingleEnv(BaseEnv):
         else:
             raise NotImplementedError
 
-    def reset(self, seed=None, reconfigure=False, model_id=None, model_scale=None):
+    # BK fix: options 추가
+    # gym 0.23.0 stable_baselinses3 최신 버전 python 3.10쓰기 위함
+    def reset(self, seed=None, reconfigure=False, model_id=None, model_scale=None, options=None):
         self.set_episode_rng(seed)
         _reconfigure = self._set_model(model_id, model_scale)
         reconfigure = _reconfigure or reconfigure
@@ -308,7 +310,9 @@ class PickSingleEnv(BaseEnv):
         self.pred_grasp_actor_critic = None
         self.pred_target_actor_critic = np.zeros(4)
         obs = super().reset(seed=self._episode_seed, reconfigure=reconfigure)
-        return obs
+
+        info = {}  # BK fig
+        return obs, info
 
     def _set_model(self, model_id, model_scale):
         """Set the model id and scale. If not provided, choose one randomly."""
@@ -1019,7 +1023,13 @@ class PickSingleEnv(BaseEnv):
         reward = self.get_reward(obs=obs, action=action, info=info)
         info.update(self._cache_info)
         done = self.get_done(obs=obs, info=info)
-        return obs, reward, done, info
+
+        # BK fix
+        terminated = done
+        truncated = False  # 일단 truncated는 False로 간주
+
+        # return obs, reward, done, info
+        return obs, reward, terminated, truncated, info
 
     def _after_simulation_step(self, sim_step):
         if not self.gen_traj_mode:
@@ -1543,6 +1553,10 @@ class PickSingleYCBEnv(PickSingleEnv):
         self,
         **kwargs,
     ):
+        
+        # BK add
+        self.render_mode = None
+
         asset_root = Path(format_path(self.DEFAULT_ASSET_ROOT))
 
         grasp_json = asset_root / format_path(self.DEFAULT_GRASP_JSON)

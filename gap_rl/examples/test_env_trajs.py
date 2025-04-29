@@ -33,7 +33,9 @@ def main():
     obs_mode = "state_egopoints"  # state_egopoints, state_objpoints_rt, state_grasp9d
     grasp_select_mode = "near4"  # angle_filter, nearest, random, near4, near4_filter
     control_mode = "pd_ee_delta_pose_euler"  # "pd_ee_delta_pose"
-    gen_traj_mode = "random2d"  # "random2d", "line", "circular", "bezier2d"
+
+    gen_traj_mode = "bezier2d"  # "random2d", "line", "circular", "bezier2d"
+
     robot_id = "ur5e_robotiq85_old"
     env_cfg_file = ALGORITHM_DIR / f"config/env_settings.yaml"
     with open(env_cfg_file, "r", encoding="utf-8") as fin:
