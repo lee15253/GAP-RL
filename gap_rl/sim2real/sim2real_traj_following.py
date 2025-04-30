@@ -663,17 +663,11 @@ class Sim2Real:
         # scene_points: P^t (ee frame): EE 입장에서 본 scene
         # centers: \hat{P_c^t} (ee frame): 위 과정에서 구한 grasp 위치 후보
         # pred_gg_ee => 후보 각각의 위치 (translation), 방향 (rotation), 품질 점수 (scores) 등을 나타냄
-
-        # https://arxiv.org/pdf/2403.15054v1 논문을 잠깐 봤는데도, 좀 헷가리넹
-
+        # https://arxiv.org/pdf/2403.15054v1 논문을 잠깐 봤는데도, 좀 헷갈리네
         pred_gg_ee = self.lgNet.infer_from_centers(
             scene_points=scene_points_ee_tensor,
             centers=update_centers_ee_tensor
         )
-
-
-
-
 
         # print('nms filtered grasps number:', pred_gg_ee.size)
 
@@ -689,6 +683,7 @@ class Sim2Real:
         if self.args.vis_data:
             draw_o3d_geometries([scene_points_ee] + pred_gg_ee.to_open3d_geometry_list())
 
+        # Local grasp의 output은 graspnet 좌표계. 이걸 sapien 좌표계로 바꿔준다. (gpt: (x,y,z) => (z,x,y))
         # grasp pose representation (graspnet -> sapien)
         pred_gg_ee.rotations = np.einsum('ijk, kl -> ijl', pred_gg_ee.rotations, np.array([[0, 0, 1], [1, 0, 0], [0, 1, 0]]))  # (N, 4, 4)
         print("grasp inference time: ", time.time() - t)
