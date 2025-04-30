@@ -118,10 +118,15 @@ class GraspPointAppGroup(nn.Module):
         self.group_conv2 = torch.nn.Conv1d(group_mlp_specs[0], group_mlp_specs[1], 1)
         self.group_norm2 = nn.LayerNorm(group_mlp_specs[1], eps=1e-6)
 
+    # 아마도
+    # x_init: 20개 gaussian points, x: orig grasp moved with x_init
     def forward(self, x_init, x):
         # x size: (B, N, K, 3 + C), x_init size: (B, K, 3 + C)
+        # (1,40,20,3), (1,20,3)
         bat, n_pts, k_pts, feat_num = x.size()
         intra_grasp_feat = torch.cat([x_init.unsqueeze(1), x], dim=1)  # (B, N+1, K, 3+C)
+        
+        # 원래 grasp points에 gaussian 20개 더한게 x고, 다시 그걸 20개에 대해 평균낸게 grasp_center
         grasp_center = torch.mean(x[..., :3], dim=2)  # (B, N, 3)
 
         x = intra_grasp_feat.view(bat, (n_pts+1) * k_pts, feat_num).transpose(2, 1).contiguous()  # (B, 3+C, N+1 * K)
@@ -129,6 +134,7 @@ class GraspPointAppGroup(nn.Module):
         x = x.transpose(2, 1).contiguous()  # (B, gg[0], N+1 * K)
         x = F.relu(self.grasp_norm2(self.grasp_conv2(x).transpose(2, 1).contiguous()))  # (B, N+1 * K, gg[1])
         x = x.view(-1, n_pts+1, k_pts, self.graspgroup_featnum)  # (B, N+1, K, gg[-1])
+        #(1, 41, 20, 32) -> (1, 41, 32) (가우시안 더해서 20개로 뿔렸던거 다시 max하나만 남기도록 pool)
         x = torch.max(x, 2)[0]  # (B, N+1, gg[-1])
         x = torch.cat([x[:, 1:], x[:, 0].unsqueeze(1).repeat(1, n_pts, 1), grasp_center], 2)  # (B, N, 2 * gg[-1]+3)
 
@@ -137,6 +143,7 @@ class GraspPointAppGroup(nn.Module):
         x = x.transpose(2, 1).contiguous()  # (B, g[0], N)
         x = F.relu(self.group_norm2(self.group_conv2(x).transpose(2, 1).contiguous()))  # (B, N，g[1])
         x = x.transpose(2, 1).contiguous()  # (B, g[1], N)
+        # (1, 256, 40) -> (1, 256) (40개의) grasp 중 max값인거 선택
         x = torch.max(x, 2)[0]  # (B, g[-1])
         return x
 

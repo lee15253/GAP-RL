@@ -558,12 +558,16 @@ class PickSingleEnv(BaseEnv):
 
             lg_grasps_poses = []
             lg_grasps_scores = []
+
+
             for grasp_view_id in grasp_view_ids:
                 if self.lg_grasps_dict[grasp_view_id] is not None:
                     transformations = self.lg_grasps_dict[grasp_view_id]['transformations']
                     lg_grasps_poses.extend(transformations)
                     scores = self.lg_grasps_dict[grasp_view_id]['scores']
                     lg_grasps_scores.extend(scores)
+
+
             if len(lg_grasps_poses) > 0:
                 lg_grasps_poses = np.array(lg_grasps_poses)
                 grasp_mats = np.repeat(np.eye(4)[None], lg_grasps_poses.shape[0], 0)
@@ -578,6 +582,7 @@ class PickSingleEnv(BaseEnv):
         ### get grasps of the obj and trans to EE frame
         grasp_ids = np.arange(self.lg_grasps_mat.shape[0])
 
+        # Grasp 후보 (self.lg_grasps_mat)를 object 좌표계 => ee 좌표계로 변환
         ## transfer to ee frame
         trans_obj2ee = self._get_obj2ee()
         grasps_mat_ee = np.einsum(
@@ -627,12 +632,14 @@ class PickSingleEnv(BaseEnv):
             action=action.astype(np.float32),
         )
 
+        # github에 있는 Local Grasp을 매번 inference 하는 대신에, 미리 저장해놓고 근사하는 코드.
         ### compute current nearest LoG grasps
         grasps_ee, grasps_scores = self._compute_near_grasps()
 
         ## add grasp mask in hand_camera
         grasp_exist = np.ones(5) if len(self.grasp_ids) > 0 else np.zeros(5)
 
+        # IV-D. 1) Grasp as points: {x_i}_i=1^L 뽑는 과정 (20개 뽑는다)
         if self.grasp_points_mode == "gauss":
             ## gaussian points
             rng = np.random.RandomState(np.random.RandomState().randint(2 ** 32))
@@ -650,6 +657,7 @@ class PickSingleEnv(BaseEnv):
         else:
             raise NotImplementedError
 
+        # IV-D. 1) Grasp as points: T_Xh를 적용하는 과정
         R, T = grasps_ee[:, :3, :3].transpose((0, 2, 1)), grasps_ee[:, :3, 3]
         gripper_pts_diff = np.einsum("ij, kjl -> kil", gripper_pts_ee, R) + np.repeat(
             T[:, None, :], gripper_pts_ee.shape[0], axis=1
@@ -725,6 +733,7 @@ class PickSingleEnv(BaseEnv):
         )
         return obj_exist_mask
 
+    # 특정 시야에서 특정 grasp가 보이는지 안보이는지
     def _get_grasp_exist_mask(self):
         if self.obs_mode == "state_egortgrasppoints":
             return 1 if self.grasps_mat_ee.shape[0] > 1 else 0
@@ -928,6 +937,7 @@ class PickSingleEnv(BaseEnv):
             action=action.astype(np.float32),
         )
 
+        # 아래 한줄로, 원래 region center explorer + local grasp inference 해야하는거를 대체해버림.
         grasps_ee, grasps_scores = self._compute_near_grasps_rt()
 
         # add grasp mask in hand_camera

@@ -202,13 +202,20 @@ class CustomGraspPointGroupExtractor(BaseFeaturesExtractor):
         ee_pose_base = observations["tcp_pose"]  # (N, 6)
         action = observations["action"]  # (N, 7)
         grasp_exist = observations["grasp_exist"]  # (N, 5)
+        
+        # 20개의 sampled gaussian
         origin_gripper_pts = observations["origin_gripper_pts"]  # (N, k, 3)
+        # (40,3)의 grasp후보군이 가우시안만큼 이동한 것
         gripper_pts_diff = observations["gripper_pts_diff"]  # (N, ng, k, 3)
         bs, ng, k, _ = gripper_pts_diff.shape
 
         ## other state
-        state = torch.cat([ee_pose_base, gripper_pos, action, grasp_exist], dim=1)
+
+        # RL input: O_grasp + O_state
+        # O_grasp
         pn_feature = self.gpcg(origin_gripper_pts, gripper_pts_diff)  # (N, 256)
+        state = torch.cat([ee_pose_base, gripper_pos, action, grasp_exist], dim=1)
+        # O_state
         state_feature = self.state_map(state)
 
         return torch.cat((state_feature, pn_feature), dim=1)

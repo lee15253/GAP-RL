@@ -9,8 +9,9 @@
             "type": "python",
             "request": "launch",
             // "program": "/home/nrmk/projects/GAP-RL/gap_rl/examples/test_env_trajs.py",
-            // "program": "/home/nrmk/projects/GAP-RL/gap_rl/algorithms/scripts/sac_train.py",
-            "program": "/home/nrmk/projects/GAP-RL/gap_rl/sim2real/sim2real_traj_following.py",
+            "program": "/home/nrmk/projects/GAP-RL/gap_rl/algorithms/scripts/sac_train.py",
+            // "program": "/home/nrmk/projects/GAP-RL/gap_rl/sim2real/sim2real_traj_following.py",
+            // "program": "/home/nrmk/projects/GAP-RL/gap_rl/localgrasp/test.py",
 
             "console": "integratedTerminal",
             "justMyCode": false,
@@ -20,7 +21,7 @@
                 // "MUJOCO_EGL_DEVICE_ID":"0",
             },
             "args" : [
-                // "--config-name", "egopoints_ur85_bezier2d",
+                "--config-name", "egopoints_ur85_bezier2d",
             ]
         }
     ]
