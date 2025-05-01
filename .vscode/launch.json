@@ -8,20 +8,22 @@
             "name": "Python: Current File",
             "type": "python",
             "request": "launch",
-            // "program": "/home/nrmk/projects/GAP-RL/gap_rl/examples/test_env_trajs.py",
-            "program": "/home/nrmk/projects/GAP-RL/gap_rl/algorithms/scripts/sac_train.py",
-            // "program": "/home/nrmk/projects/GAP-RL/gap_rl/sim2real/sim2real_traj_following.py",
-            // "program": "/home/nrmk/projects/GAP-RL/gap_rl/localgrasp/test.py",
+            // "program": "/home/nas2_userI/byungkunlee/research/rl/GAP-RL/gap_rl/examples/test_env_trajs.py",
+            "program": "/home/nas2_userI/byungkunlee/research/rl/GAP-RL/gap_rl/algorithms/scripts/sac_train.py",
+            // "program": "/home/nas2_userI/byungkunlee/research/rl/GAP-RL/gap_rl/sim2real/sim2real_traj_following.py",
+            // "program": "/home/nas2_userI/byungkunlee/research/rl/GAP-RL/gap_rl/localgrasp/test.py",
 
             "console": "integratedTerminal",
             "justMyCode": false,
             "env" :{
-                "CUDA_VISIBLE_DEVICES":"0", 
+                "DISPLAY": "",
+                "VK_ICD_FILENAMES": "/usr/share/vulkan/icd.d/nvidia_icd.json",
+                "CUDA_VISIBLE_DEVICES":"7", 
                 // "HYDRA_FULL_ERROR":"0",
                 // "MUJOCO_EGL_DEVICE_ID":"0",
             },
             "args" : [
-                "--config-name", "egopoints_ur85_bezier2d",
+                "--config-name", "egopoints_ur85_bezier2d_goalaux",
             ]
         }
     ]

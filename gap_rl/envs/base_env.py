@@ -3,6 +3,7 @@ from collections import OrderedDict
 from typing import Dict, Optional, Sequence, Union, Tuple
 import gym
 import numpy as np
+import torch
 import sapien.core as sapien
 from gap_rl import ASSET_DIR, logger
 from gap_rl.agents.base_agent import AgentConfig, BaseAgent

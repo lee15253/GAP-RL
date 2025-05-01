@@ -1122,15 +1122,27 @@ class PickSingleEnv(BaseEnv):
 
         elif self.obs_mode in ["state_egopoints", "state_grasp9d", "state_egopoints_rt", "state_grasp9d_rt"]:
             if self.obs_mode in ["state_egopoints", "state_grasp9d"]:
+                # self.grasps_mat: object 좌표계에서 grasp가 위치해야 할 자세 (position of grasp from 'object frame')
+                # @@@@@ 이 self.grasps_mat은 local grasp로부터 나온 값이 아니야. IV-E 2)의, GraspNet에서 나온 값이야!!!!
+                
+                # obj frame -> world frame
                 trans_obj2world = self.obj_pose.to_transformation_matrix()
+                # world frame -> ee frame
                 trans_world2ee = self.tcp.pose.inv().to_transformation_matrix()
+                # 먼저 제일 우항인 obj -> world를 구하고, world -> ee를 곱한다 (결국 obj -> ee frame)
                 trans_obj2ee = trans_world2ee @ trans_obj2world
+                # grasps_mat_ee: position of grasp from 'ee frame'
                 grasps_mat_ee = np.einsum(
                     "ij, kjl -> kil", trans_obj2ee, self.grasps_mat
                 )  # (N, 4, 4)
+                
             elif self.obs_mode in ["state_egopoints_rt", "state_grasp9d_rt"]:
                 grasps_mat_ee = self.grasps_mat_ee
+                
+            # dist(EE, grasp)
             translation_dist = np.linalg.norm(grasps_mat_ee[:, :3, 3], axis=1)  # (N,)
+            
+            # 
             quat = Rotation.from_matrix(
                 grasps_mat_ee[:, :3, :3]
             ).as_quat()  # (N, 4) xyzw
@@ -1193,23 +1205,27 @@ class PickSingleEnv(BaseEnv):
         is_robot_static, is_obj_grasp, is_obj_static, is_obj_lift = info["evaluate_info"]
         is_success = info["is_success"]
 
+        # rw 4) grasp visibility term
         info_exist_reward = 3 if info["is_info_exist"] else 0
 
+        # rw 3) lifting term
         if is_success:
             reward = 15.0
         else:
+            # rw 1)
+            # 얘는, local grasp랑 상관 없고, Sec IV-E-2)의 GraspNet의 target grasp pose (self.grasps_mat) 과의 차이를 구해서 reward를 주는 거임.
             # approach obj/grasp
             translation_dist, rotation_dist, grasp_id = self.compute_grasps_dist()
-
             approach_reward = 3 * (
                 1 - np.tanh(5.0 * translation_dist[grasp_id])
             ) + 3 * (1 - np.tanh(5.0 * rotation_dist[grasp_id]))
 
-            # grasp reward
+            # rw 2) grasp reward
             grasp_reward = 3.0 if is_obj_grasp else 0.0
 
             # reach-goal reward
             if is_obj_grasp:
+                # r2 3) lifting term
                 ## old reward
                 goal_dist_z = np.clip(
                     self.goal_thresh - obj_pose.p[2], 0, self.goal_thresh
@@ -1569,6 +1585,7 @@ class PickSingleYCBEnv(PickSingleEnv):
 
         asset_root = Path(format_path(self.DEFAULT_ASSET_ROOT))
 
+        # 미리 github에 나와있는 설명처럼 near_grasp들 미리 계산한거 불러오자
         grasp_json = asset_root / format_path(self.DEFAULT_GRASP_JSON)
         if not grasp_json.exists():
             raise FileNotFoundError(

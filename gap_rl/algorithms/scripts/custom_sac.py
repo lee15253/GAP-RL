@@ -345,6 +345,7 @@ def goal_pred_rotmat_loss(grasp_pred, grasp_goal):
     """
     grasp_pred, grasp_goal: (N, 9), xyz + rx + rz
     """
+    # TODO: 여기부터
     trans_dist = th.norm((grasp_pred[:, 6:] - grasp_goal[:, 6:]), dim=1)   # (bs, )
     grasp_pred_rotz = th.cross(grasp_pred[:, :3], grasp_pred[:, 3:6])
     grasp_pred_mat = th.cat((grasp_pred[:, :3].unsqueeze(2), grasp_pred[:, 3:6].unsqueeze(2), grasp_pred_rotz.unsqueeze(2)), dim=2)  # (bs, 3, 3)

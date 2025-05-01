@@ -283,6 +283,7 @@ def main(grasp_file, model_ids, stereo=False, vis=False, render=False, save=Fals
             else:
                 trans_cam2world = env.unwrapped._cameras["data_cam"].camera.get_model_matrix()
             trans_world2obj = env.obj_pose.inv().to_transformation_matrix()
+            # ee -> cam (맨오른쪽) / cam -> world  (그왼쪽) / world -> obj (그왼쪽)
             trans_ee2obj = trans_world2obj @ trans_cam2world @ np.linalg.inv(env.unwrapped.trans_cam2ee)
             # trans_ee2world = trans_cam2world @ np.linalg.inv(env.unwrapped.trans_cam2ee)
 
