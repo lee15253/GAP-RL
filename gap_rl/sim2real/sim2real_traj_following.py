@@ -516,6 +516,8 @@ class Sim2Real:
         trans_base2ee_tensor = torch.linalg.inv(trans_ee2base_tensor)
         # camera -> ee
         trans_hand2ee_tensor = self.handCam_to_ees[self.cam_id]
+        
+        
 
         # 이전 grasp 결과: EE좌표계 -> base 좌표계
         prev_gg_trans_base = transform_points(trans_ee2base_tensor, torch.from_numpy(prev_gg_ee.translations).float().cuda())
