@@ -345,7 +345,8 @@ def goal_pred_rotmat_loss(grasp_pred, grasp_goal):
     """
     grasp_pred, grasp_goal: (N, 9), xyz + rx + rz
     """
-    # TODO: 여기부터
+    # IV. E. L_goal loss
+    # x 회전방향과 z 회전방향을 outer-product 해서 y 회전방향 구하고, 그걸로 3x3 rotation matrix를 만든다.
     trans_dist = th.norm((grasp_pred[:, 6:] - grasp_goal[:, 6:]), dim=1)   # (bs, )
     grasp_pred_rotz = th.cross(grasp_pred[:, :3], grasp_pred[:, 3:6])
     grasp_pred_mat = th.cat((grasp_pred[:, :3].unsqueeze(2), grasp_pred[:, 3:6].unsqueeze(2), grasp_pred_rotz.unsqueeze(2)), dim=2)  # (bs, 3, 3)
@@ -354,6 +355,7 @@ def goal_pred_rotmat_loss(grasp_pred, grasp_goal):
     grasp_goal_mat_rotz180 = grasp_goal_mat.clone()
     grasp_goal_mat_rotz180 = grasp_goal_mat_rotz180 * th.tensor([-1, -1, 1], device=grasp_goal_mat_rotz180.device)  # (bs, 3, 3)
 
+    # trace(R1R2^T) = 1 +2cos(theta). 즉 theta=0이면 3, theta=180이면 -1
     rot_dist0 = 3 - th.diagonal(th.einsum("ijk, ikl -> ijl", grasp_pred_mat, grasp_goal_mat.transpose(1, 2)), dim1=-2, dim2=-1).sum(dim=-1)
     rot_dist1 = 3 - th.diagonal(th.einsum("ijk, ikl -> ijl", grasp_pred_mat, grasp_goal_mat_rotz180.transpose(1, 2)), dim1=-2, dim2=-1).sum(dim=-1)
     rotation_dist = th.minimum(rot_dist0, rot_dist1)  # (bs,)

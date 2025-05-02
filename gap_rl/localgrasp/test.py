@@ -11,9 +11,12 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(add_help=False)
     parser = lg_parse(parser)
     args, opts = parser.parse_known_args()
+
+    args.checkpoint_path = '/home/nrmk/projects/GAP-RL/gap_rl/localgrasp/epoch_11_acc_0.915_cover_0.765'
+
     grasp_detector = LgNet(args)
 
-    data = np.load('scene_example.npz', allow_pickle=True)
+    data = np.load('/home/nrmk/projects/GAP-RL/gap_rl/localgrasp/scene_example.npz', allow_pickle=True)
 
     rgb, xyz, centers = data['arr_0'], data['arr_1'], data['arr_2']
     pred_gg = grasp_detector.infer_from_centers(

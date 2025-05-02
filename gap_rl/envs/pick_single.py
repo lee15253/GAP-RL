@@ -1078,10 +1078,14 @@ class PickSingleEnv(BaseEnv):
         return vel < vel_thresh
 
     def evaluate_success(self):
+        # 로봇이 정지해있나
         is_robot_static = self.check_robot_static()
+        # 물체를 안정적으로 잡았나
         is_obj_grasp = self.agent.check_grasp(self.obj, max_angle=30)
+        # 물체를 들어 올렸나
         obj_pose = self.obj_pose
         is_obj_lift = obj_pose.p[2] > self.goal_thresh
+        # 물체가 움직이지 않고 정지 상태인가
         is_obj_static = self.check_obj_static()
         return [is_robot_static, is_obj_grasp, is_obj_static, is_obj_lift]
 

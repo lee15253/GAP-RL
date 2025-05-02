@@ -37,6 +37,7 @@ class UR5e_Robotiq85_old(BaseAgent):
         assert isinstance(actor, sapien.ActorBase), type(actor)
         contacts = self.scene.get_contacts()
 
+        # finger와 object간의 contact
         limpulse = get_pairwise_contact_impulse(contacts, self.finger1_link, actor)
         rimpulse = get_pairwise_contact_impulse(contacts, self.finger2_link, actor)
 

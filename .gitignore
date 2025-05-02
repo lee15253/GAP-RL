@@ -3,6 +3,7 @@
 # Reference: https://intellij-support.jetbrains.com/hc/en-us/articles/206544839
 
 pytorch3d/
+2025*
 
 # User-specific stuff
 .idea/**/workspace.xml
