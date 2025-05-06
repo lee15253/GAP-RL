@@ -106,12 +106,19 @@ if __name__ == "__main__":
     print("experiment random seeds: ", args.seeds)
     for rseed in args.seeds:
         setup_seed(rseed)
+        
+        
+        args.checkpoint_path = f'gap_rl/localgrasp/{args.checkpoint_path}'
         lgNet = LgNet(args)
+        
+        
         print(args.eval_datasets, args.gen_traj_modes)
         noise_str = "noise" if args.add_noise else ""
 
         # log_path = "20240307_174224_sac4_state_egopoints_pd_ee_delta_pose_euler_YCB12_40_bezier2d_vary_nearest"
-        log_path = glob.glob(f"{args.timestamp}*")[0]
+        # log_path = glob.glob(f"{args.timestamp}*")[0]
+        log_path = '20250502_181643_sac1_state_egopoints_pd_ee_delta_pose_euler_YCB12_40_bezier2d_vary_None'
+        
         config_file = ALGORITHM_DIR / f"scripts/{log_path}/config.yaml"
         with open(config_file, 'r', encoding='utf-8') as fin:
             cfg = yaml.load(fin, Loader=yaml.FullLoader)
@@ -159,6 +166,7 @@ if __name__ == "__main__":
                     sim_freq=cfg['sim_freq'],
                     control_freq=cfg['control_freq'],
                     device=cfg["device"],
+                    # render_mode="agent_cameras",  # TODO:
                 )
                 # if args.n_stack > 1:
                 #     env = DictObservationStack(env, num_stack=args.n_stack)
@@ -175,12 +183,13 @@ if __name__ == "__main__":
                     trajectory_name=None,
                     save_video=args.save_video,
                     info_on_video=False,
-                    render_mode="agent_cameras",
+                    render_mode="agent_cameras",  # TODO:
                     save_on_reset=True,
                     clean_on_close=True,
                 )
                 # Note: load RL model, it will change record._main_seed
-                model_path = f"{log_path}/rl_model_2000000_steps"
+                # model_path = f"{log_path}/rl_model_2000000_steps"
+                model_path = f"/home/nas2_userI/byungkunlee/research/rl/GAP-RL/gap_rl/algorithms/scripts/20250502_181643_sac1_state_egopoints_pd_ee_delta_pose_euler_YCB12_40_bezier2d_vary_None/rl_model_3600000_steps"
                 rl_model = SAC.load(model_path,
                                     env=record_env,
                                     print_system_info=True

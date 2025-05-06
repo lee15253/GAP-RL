@@ -54,10 +54,23 @@ class CustomActor(Actor):
             normalize_images=normalize_images,
         )
         last_layer_dim = net_arch[-1] if len(net_arch) > 0 else features_dim
-        self.extra_pred = nn.Linear(last_layer_dim, 7)  # predict 6d pose (pos, quat)
+        
+        
+        # TODO: compatibility with algorithms/scripts/custom_sac.py
+        # self.extra_pred = nn.Linear(last_layer_dim, 7)  # predict 6d pose (pos, quat)
+        self.extra_pred = nn.Linear(last_layer_dim, 9)  
+        
+        
         nn.init.xavier_uniform_(self.extra_pred.weight, gain=1)
         nn.init.constant_(self.extra_pred.bias, 0)
         self.extra_pred_dim = extra_pred_dim
+        
+        # TODO: compatibility with algorithms/scripts/custom_sac.py
+        self.target_pred = nn.Linear(last_layer_dim, 4)  # predict other targets
+        nn.init.xavier_uniform_(self.target_pred.weight, gain=1)
+        nn.init.constant_(self.target_pred.bias, 0)
+        
+        
 
     def action_log_prob(self, obs: th.Tensor) -> Tuple[th.Tensor, th.Tensor]:
         assert self.use_sde, "use_sde True."
@@ -105,14 +118,24 @@ class CustomContinuousCritic(BaseModel):
             q_net = nn.Sequential(*q_net)
             self.add_module(f"qf{idx}", q_net)
             self.q_networks.append(q_net)
-
+            
+            
+        # TODO: compatibility with algorithms/scripts/custom_sac.py
+        # self.extra_pred_dim = extra_pred_dim
+        # extra_pred = create_mlp(features_dim, self.extra_pred_dim, net_arch, activation_fn) # TODO: 저 인자가 없어 애초에 , zero_init_output=False)
+        # self.extra_pred = nn.Sequential(*extra_pred)
+        # for m in self.extra_pred.modules():
+        #     if isinstance(m, nn.Linear):
+        #         nn.init.xavier_uniform_(m.weight, gain=1)
+        #         nn.init.constant_(m.bias, 0)
         self.extra_pred_dim = extra_pred_dim
-        extra_pred = create_mlp(features_dim, self.extra_pred_dim, net_arch, activation_fn, zero_init_output=False)
-        self.extra_pred = nn.Sequential(*extra_pred)
-        for m in self.extra_pred.modules():
-            if isinstance(m, nn.Linear):
-                nn.init.xavier_uniform_(m.weight, gain=1)
-                nn.init.constant_(m.bias, 0)
+        self.extra_pred = nn.Linear(features_dim, extra_pred_dim)  # predict 6d pose (pos, quat)
+        nn.init.xavier_uniform_(self.extra_pred.weight, gain=1)
+        nn.init.constant_(self.extra_pred.bias, 0)
+        self.target_pred = nn.Linear(features_dim, 4)  # predict other targets
+        nn.init.xavier_uniform_(self.target_pred.weight, gain=1)
+        nn.init.constant_(self.target_pred.bias, 0)
+        
 
     def forward(self, obs: th.Tensor, actions: th.Tensor):
         # Learn the features extractor using the policy loss only
@@ -169,7 +192,11 @@ class CustomSACPolicy(SACPolicy):
         share_features_extractor: bool = False,
         extra_pred_dim: int = 7,
     ):
-        self.extra_pred_dim = extra_pred_dim
+        
+        # TODO: compatibility with algorithms/scripts/custom_sac.py
+        # self.extra_pred_dim = extra_pred_dim
+        self.extra_pred_dim = 9
+        
         # self.critic_feature_class = critic_feature_class
         # self.critic_feature_kwargs = critic_feature_kwargs
         super().__init__(

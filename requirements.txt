@@ -33,7 +33,7 @@ cupoch
 scikit-image
 tensorboardX
 torchsummary
---extra-index-url https://download.pytorch.org/whl/cu117
+# --extra-index-url https://download.pytorch.org/whl/cu117
 # graspnetAPI  # install indenpendently
 # pytorch3d  # install indenpendently
 fvcore

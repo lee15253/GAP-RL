@@ -115,7 +115,7 @@ def sb3_make_multienv(
             sim_freq=sim_freq,
             control_freq=control_freq,
             device=device,
-            renderer_kwargs={"offscreen_only":True, 'device':'cuda:0'}  # FIXME: Kaist server            
+            renderer_kwargs={"offscreen_only":True, 'device':'cuda0'}  # FIXME: Kaist server            
         )
         # Important: use a different seed for each environment
         if stack_obs:

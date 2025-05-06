@@ -1268,36 +1268,52 @@ class PickSingleEnv(BaseEnv):
         return reward
 
     def render(self, mode="human", view_workspace=True, view_traj=True, view_grasps=True, view_obj_bbdx=False):
+        # _view_grasps => compute near grasps 40개 후보군
+        # _view_anno_grasps => 내 로봇의 gripper (빨강) + GraspNet의 저 object의 것 중 현재 내 gripper와 가장가까운 놈 (노랑)
+        # _view_pred_grasp / _view_obj_bbdx => 안들어가져서 모르겠음
+        # _view_grasps => compute_near_grasps (40개 후보군)
+        
+        
+        # 흰색 Workspace
         if view_workspace and self.gen_traj_mode in ["random2d", "bezier2d"]:
             ws = self._view_workspace()
+        # object가 이동하는 경로
         if view_traj:
             traj = self._view_traj()
+            
         if view_grasps and self.obs_mode in ['state_grasp9d', 'state_egopoints', 'state_egopoints_rt', 'state_grasp9d_rt']:
             if self.pred_grasp_actor_critic is not None:
                 grasp_pred = self._view_pred_grasp()
             if self.grasps_mat is not None:
                 grasp_anno = self._view_anno_grasps()
             grasps = self._view_grasps()
+            
         if view_grasps and self.obs_mode == 'state_objpoints_rt':
             if self.grasps_mat is not None:
                 grasp_anno = self._view_anno_grasps()
             if self.pred_grasp_actor_critic is not None:
                 grasp_pred = self._view_pred_grasp()
+                
         if view_obj_bbdx:
             obj_bbdx = self._view_obj_bbdx()
+            
+            
         if mode in ["human", "rgb_array"]:
             # set_actor_visibility(self.goal_site, 0.5)
             ret = super().render(mode=mode)
             # set_actor_visibility(self.goal_site, 0.0)
         else:
             ret = super().render(mode=mode)
+            
+            
+            
         if view_workspace and self.gen_traj_mode in ["random2d", "bezier2d"]:
             self._remove_lineset(ws)
         if view_traj:
             self._remove_lineset(traj)
         if view_grasps and self.obs_mode in ['state_grasp9d', 'state_egopoints', 'state_egopoints_rt', 'state_grasp9d_rt']:
-            if self.pred_grasp_actor_critic is not None:
-                self._remove_lineset(grasp_pred)
+            # if self.pred_grasp_actor_critic is not None:
+            #     self._remove_lineset(grasp_pred)
             if self.grasps_mat is not None:
                 self._remove_lineset(grasp_anno)
             self._remove_lineset(grasps)
@@ -1308,6 +1324,9 @@ class PickSingleEnv(BaseEnv):
                 self._remove_lineset(grasp_pred)
         if view_obj_bbdx:
             self._remove_lineset(obj_bbdx)
+            
+            
+            
         return ret
 
     def _view_workspace(self):
@@ -1586,6 +1605,7 @@ class PickSingleYCBEnv(PickSingleEnv):
         
         # BK add
         self.render_mode = None
+        # self.render_mode = kwargs.get("render_mode", None)
 
         asset_root = Path(format_path(self.DEFAULT_ASSET_ROOT))
 

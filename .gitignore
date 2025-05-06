@@ -4,6 +4,8 @@
 
 pytorch3d/
 2025*
+**/*.png
+**/*.zip
 
 # User-specific stuff
 .idea/**/workspace.xml

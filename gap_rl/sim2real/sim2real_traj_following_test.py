@@ -13,8 +13,11 @@ import torch
 from pytorch3d.ops import ball_query, sample_farthest_points
 from matplotlib import pyplot as plt
 import open3d as o3d
-import rospy
-from tf.transformations import euler_from_quaternion
+
+# import rospy
+# from tf.transformations import euler_from_quaternion
+
+from transformations import euler_from_quaternion
 
 import gym
 import h5py
@@ -35,10 +38,13 @@ from gap_rl.utils.wrappers.common import NormalizeBoxActionWrapper
 from gap_rl.utils.o3d_utils import draw_o3d_geometries, crop_pcd
 
 from gap_rl.localgrasp.LoG import LgNet, lg_parse, GraspGroup
-from gap_rl.sim2real.robot_control import RobotUR
-from gap_rl.sim2real.gripper_control import GripperController
+
+# from gap_rl.sim2real.robot_control import RobotUR
+# from gap_rl.sim2real.gripper_control import GripperController
+
 from gap_rl.sim2real.config import pose_realsense_gripper
-from gap_rl.sim2real.image_helpers import RealsenseCamera
+
+# from gap_rl.sim2real.image_helpers import RealsenseCamera
 
 
 def smooth_actions(actions: np.ndarray):
@@ -207,10 +213,15 @@ def grasp_pose_ee_dist(grasp_mats_ee, trans_rot_ratio=1.0):
 class Sim2Real:
     def __init__(self, args=None):
         self.args = args
-        self.hand_cams = [
-            # RealsenseCamera(camera_sn=self.args.realsense_sn[0]),
-            RealsenseCamera(camera_sn=self.args.realsense_sn[1])
-        ]
+        
+        
+        # self.hand_cams = [
+        #     # RealsenseCamera(camera_sn=self.args.realsense_sn[0]),
+        #     RealsenseCamera(camera_sn=self.args.realsense_sn[1])
+        # ]
+        
+        
+        
         self.handCam_to_ee_nps = [
             # sapien.Pose(p=pose_realsense[:3], q=pose_realsense[3:]).to_transformation_matrix(),
             sapien.Pose(p=pose_realsense_gripper[:3], q=pose_realsense_gripper[3:]).to_transformation_matrix()
@@ -240,10 +251,13 @@ class Sim2Real:
 
         if self.args.rl_mode in ["grasprt", "objpcrt"]:
             print("init rl model")
-            self.rl_model = SAC.load(f"{self.args.model_path}/rl_model_2000000_steps", device="cuda:0")
+            # self.rl_model = SAC.load(f"{self.args.model_path}/rl_model_2000000_steps", device="cuda:0")
+            self.rl_model = SAC.load("/home/nas2_userI/byungkunlee/research/rl/GAP-RL/rl_model_2800000_steps", 
+                                     device="cuda:0")
 
         if self.args.rl_mode in ["grasprt", "heuristic_plan"]:
             print("init localgrasp")
+            self.args.checkpoint_path = f'gap_rl/localgrasp/{self.args.checkpoint_path}'
             self.lgNet = LgNet(self.args)
 
         # RL-related param init
@@ -263,11 +277,12 @@ class Sim2Real:
         trans_ee2base_tensor = torch.from_numpy(trans_ee2base).float().cuda()
         t = time.time()
         assert self.lgNet is not None
-        if self.args.save_rgb:
-            hand_points, hand_rgb, hand_depth = self.hand_cams[self.cam_id].get_image_pointcloud(color_depth=False)
-            hand_points_tensor = torch.from_numpy(hand_points).cuda()
-        else:
-            hand_points_tensor = torch.from_numpy(self.hand_cams[self.cam_id].get_pointcloud()).cuda()
+
+        # hand_points_tensor = torch.from_numpy(self.hand_cams[self.cam_id].get_pointcloud()).cuda()
+        # TODO: 아무값이나 넣었음
+        loaded_xyz = np.load('xyz.npy')
+        hand_points_tensor = torch.from_numpy(loaded_xyz).cuda()
+        hand_points_tensor = hand_points_tensor.view(640*360, 3)
 
         # print('hand points shape:', hand_points.shape)
         # print("get point cloud time: ", time.time() - t)
@@ -329,10 +344,7 @@ class Sim2Real:
         pred_gg_ee.rotations = np.einsum('ijk, kl -> ijl', pred_gg_ee.rotations, np.array([[0, 0, 1], [1, 0, 0], [0, 1, 0]]))  # (N, 4, 4)
         # pred_gg_ee.rotations = np.einsum('ijk, kl -> ijl', pred_gg_ee.rotations, np.array([[0, 0, 1], [-1, 0, 0], [0, -1, 0]]))  # (N, 4, 4)
 
-        if self.args.save_rgb:
-            return pc_base, obj_points_base, centers_base.cpu().numpy(), scene_points_ee, obj_points_ee, centers_ee.cpu().numpy(), pred_gg_ee, hand_rgb, hand_depth
-        else:
-            return pc_base, obj_points_base, centers_base.cpu().numpy(), scene_points_ee, obj_points_ee, centers_ee.cpu().numpy(), pred_gg_ee
+        return pc_base, obj_points_base, centers_base.cpu().numpy(), scene_points_ee, obj_points_ee, centers_ee.cpu().numpy(), pred_gg_ee
 
 
     def track_grasps(self, prev_gg_ee, trans_ee2base):
@@ -362,11 +374,16 @@ class Sim2Real:
 
         # Algorithm require: 카메라 포인트 클라우드 획득 (P^t)
         t = time.time()
-        if self.args.save_rgb:
-            hand_points, hand_rgb, hand_depth = self.hand_cams[self.cam_id].get_image_pointcloud(color_depth=False)
-        else:
-            hand_points = self.hand_cams[self.cam_id].get_pointcloud()
-        hand_points_tensor = torch.from_numpy(hand_points).float().cuda()
+
+        # hand_points = self.hand_cams[self.cam_id].get_pointcloud()
+        # hand_points_tensor = torch.from_numpy(hand_points).float().cuda()
+        
+        loaded_xyz = np.load('xyz.npy')
+        hand_points_tensor = torch.from_numpy(loaded_xyz).float().cuda()
+        hand_points_tensor = hand_points_tensor.view(640*360, 3)
+        
+        
+        
         # print('hand points shape:', hand_points.shape)
         print("get point cloud time: ", time.time() - t)
 
@@ -495,10 +512,8 @@ class Sim2Real:
         print("grasp inference time: ", time.time() - t)
 
         # return scene_points_base, update_centers_base, scene_points_ee, update_centers_ee, pred_gg_ee, hand_rgb, hand_depth
-        if self.args.save_rgb:
-            return scene_points_base, obj_points_base, update_centers_base, scene_points_ee, obj_points_ee, update_centers_ee, pred_gg_ee, hand_rgb, hand_depth
-        else:
-            return scene_points_base, obj_points_base, update_centers_base, scene_points_ee, obj_points_ee, update_centers_ee, pred_gg_ee
+
+        return scene_points_base, obj_points_base, update_centers_base, scene_points_ee, obj_points_ee, update_centers_ee, pred_gg_ee
 
     def test_ours(self, ):
         trans_base2world = np.eye(4)
@@ -521,7 +536,8 @@ class Sim2Real:
             tcp_q = Rotation.from_euler('xyz', np.array([-3.1088,  0.5647,  1.7052])).as_quat()
             # tcp_pose = np.array([ 0.2782, -0.0763,  0.4633, -3.1088,  0.5647,  1.7052],
             #                         dtype=np.float32)
-            gripper_pos = np.array([0.0189, 0.0189], dtype=np.float32)
+            # gripper_pos = np.array([0.0189, 0.0189], dtype=np.float32)
+            gripper_pos = np.array([0.0189], dtype=np.float32)
             
             
             
@@ -534,22 +550,17 @@ class Sim2Real:
                 'gripper_pos': np.repeat((1 - gripper_pos / 0.085) * 0.0425, 2).astype(np.float32),  # [0, 0.0425]
                 'tcp_pose': np.hstack([cur_ee_mat_world[:3, 3], cur_ee_euler]).astype(np.float32),
                 'action': real_action.astype(np.float32),
+                'origin_gripper_pts': gripper_pts_ee.astype(np.float32),  # TODO: RL training code와 맞춰줌. Random gaussians.
             }
             trans_ee2base = cur_pose_0.to_transformation_matrix()
-            if self.args.save_rgb:
-                scene_points_base, obj_points_base, centers_base, scene_points_ee, obj_points_ee, centers_ee, pred_gg_ee, hand_rgb, hand_depth = self.init_grasps(
-                    trans_ee2base=trans_ee2base,
-                )
-            else:
-                scene_points_base, obj_points_base, centers_base, scene_points_ee, obj_points_ee, centers_ee, pred_gg_ee = self.init_grasps(
-                    trans_ee2base=trans_ee2base,
-                )
+
+            scene_points_base, obj_points_base, centers_base, scene_points_ee, obj_points_ee, centers_ee, pred_gg_ee = self.init_grasps(
+                trans_ee2base=trans_ee2base,
+            )
             grasps_num = pred_gg_ee.size
             for key in ["trans_ee2base", "scene_points_base", "obj_points_base", "centers_base", "scene_points_ee", "obj_points_ee", "centers_ee", "pred_gg_ee"]:
                 self.exp_info[key].append(eval(key))
-            if self.args.save_rgb:
-                for key in ["hand_rgb", "hand_depth"]:
-                    self.exp_info[key].append(eval(key))
+
 
             min_grasp_ids = []
             # min_trans_dist, min_rot_dist = np.inf, np.inf
@@ -571,7 +582,8 @@ class Sim2Real:
                     {'grasp_exist': grasp_exist.astype(np.float32),
                      'gripper_pts_diff': gripper_pts_diff.astype(np.float32),
                      'grasps_scores': grasps_scores.astype(np.float32),
-                     'close_grasp_pose_ee': np.zeros(7).astype(np.float32)}
+                    #  'close_grasp_pose_ee': np.zeros(7).astype(np.float32)} # TODO: training code와 맞춰주려고
+                    'close_grasp_pose_ee': np.zeros(9).astype(np.float32)}
                 )
                 # print('grasp sampling & transform to 3d points, time', time.time() - start)
 
@@ -629,7 +641,8 @@ class Sim2Real:
                 
                 tcp_p = np.array([ 0.2782, -0.0763,  0.4633], dtype=np.float32)
                 tcp_q = Rotation.from_euler('xyz', np.array([-3.1088,  0.5647,  1.7052])).as_quat()
-                gripper_pos = np.array([0.0189, 0.0189], dtype=np.float32)
+                # gripper_pos = np.array([0.0189, 0.0189], dtype=np.float32)
+                gripper_pos = np.array([0.0189], dtype=np.float32)
                 
                 cur_pose_0 = Pose(p=tcp_p, q=tcp_q)
                 cur_ee_mat_world = trans_base2world @ Pose(p=tcp_p, q=tcp_q).to_transformation_matrix()
@@ -640,6 +653,7 @@ class Sim2Real:
                     'gripper_pos': np.repeat((1 - gripper_pos / 0.085) * 0.0425, 2).astype(np.float32),  # [0, 0.0425]
                     'tcp_pose': np.hstack([cur_ee_mat_world[:3, 3], cur_ee_euler]).astype(np.float32),
                     'action': real_action.astype(np.float32),
+                    'origin_gripper_pts': gripper_pts_ee.astype(np.float32),  # TODO: RL training code와 맞춰줌. Random gaussians.
                 }
                 trans_ee2base = cur_pose_0.to_transformation_matrix()
 
@@ -681,9 +695,7 @@ class Sim2Real:
                     print("==== min trasn, rot dist: ", trans_dist[min_grasp_ids[0]], rot_dist[min_grasp_ids[0]])
                 for key in ["trans_ee2base", "scene_points_base", "obj_points_base", "centers_base", "scene_points_ee", "obj_points_ee", "centers_ee", "pred_gg_ee"]:
                     self.exp_info[key].append(eval(key))
-                if self.args.save_rgb:
-                    for key in ["hand_rgb", "hand_depth"]:
-                        self.exp_info[key].append(eval(key))
+
 
                 print(f"step {step} ++++++++++", time.time() - start)
 
@@ -762,14 +774,16 @@ if __name__ == '__main__':
     parser.add_argument("--object-z-offset", type=float, default=0.01)
     parser.add_argument("--rl-mode", type=str, default="grasprt")  # heuristic_plan, objpcrt, grasprt
     # ours: 20240324_161009, GA-DDPG: 20240309_220614
-    parser.add_argument("--model-path", type=str, default=str(ALGORITHM_DIR / "scripts/20240324_161009"))
+    # parser.add_argument("--model-path", type=str, default=str(ALGORITHM_DIR / "scripts/20240324_161009"))
 
     ## heuristic planning
     parser.add_argument("--method", type=str, default="simple_interp")
     parser.add_argument("--task", type=str, default="dynamic")  # handover, dynamic
 
     ## ours
-    parser.add_argument("--real-mode", type=str, default="ws_filter")  # explorer, ws_filter
+    # parser.add_argument("--real-mode", type=str, default="ws_filter")  # explorer, ws_filter
+    parser.add_argument("--real-mode", type=str, default="explorer")  # explorer, ws_filter
+    
     parser.add_argument("--ball-query-r", type=float, default=0.05)
     parser.add_argument("--trans-dist-th", type=float, default=0.07)
     parser.add_argument("--rot-dist-th", type=float, default=0.07)
@@ -793,23 +807,29 @@ if __name__ == '__main__':
     # sim2real.test_cameras(trans_ee2base=trans_ee2base)
     # sim2real.get_scene_points(trans_ee2base=trans_ee2base)
 
+
+    # TODO:
+    ## get robot states
+    # robot_state_0 = self.robot.get_real_state()
+    # tcp_pose = robot_state_0['tcp_state']  # (pos, wxyz), base frame
+
+    tcp_p = np.array([ 0.2782, -0.0763,  0.4633], dtype=np.float32)
+    tcp_q = Rotation.from_euler('xyz', np.array([-3.1088,  0.5647,  1.7052])).as_quat()
+    cur_pose_0 = Pose(p=tcp_p, q=tcp_q)
+
     ## LoG warm start
-    robot_state = sim2real.robot.get_real_state()
-    print(robot_state)
-    cur_pose_0 = Pose(p=robot_state['tcp_state'][:3], q=robot_state['tcp_state'][3:])
+    # robot_state = sim2real.robot.get_real_state()
+    # print(robot_state)
+    # cur_pose_0 = Pose(p=robot_state['tcp_state'][:3], q=robot_state['tcp_state'][3:])
     trans_ee2base = cur_pose_0.to_transformation_matrix()
-    if args.save_rgb:
-        scene_points_base, obj_points_base, centers_base, scene_points_ee, obj_points_ee, centers_ee, pred_gg_ee, _, _ = \
-        sim2real.init_grasps(
-            trans_ee2base=trans_ee2base,
-            vis=False
-        )
-    else:
-        scene_points_base, obj_points_base, centers_base, scene_points_ee, obj_points_ee, centers_ee, pred_gg_ee = \
-        sim2real.init_grasps(
-            trans_ee2base=trans_ee2base,
-            vis=False
-        )
+    
+    
+
+    scene_points_base, obj_points_base, centers_base, scene_points_ee, obj_points_ee, centers_ee, pred_gg_ee = \
+    sim2real.init_grasps(
+        trans_ee2base=trans_ee2base,
+        vis=False
+    )
     print("Warm Start Down!")
     time.sleep(2)
 

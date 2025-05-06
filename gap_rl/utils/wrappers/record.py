@@ -133,7 +133,7 @@ class RecordEpisode(gym.Wrapper):
 
         self.save_video = save_video
         self.info_on_video = info_on_video
-        self.render_mode = render_mode
+        self.bk_render_mode = render_mode
         self._render_images = []
 
         self.init_state_only = False
@@ -174,12 +174,16 @@ class RecordEpisode(gym.Wrapper):
             )
 
         if self.save_video:
-            self._render_images.append(self.env.render(self.render_mode))
+            self._render_images.append(self.env.render(self.bk_render_mode))
 
         return obs
 
     def step(self, action):
-        obs, rew, done, info = super().step(action)
+        # BK fix
+        # obs, rew, done, info = super().step(action)
+        obs, rew, terminated, truncated, info = super().step(action)
+        done = terminated or truncated
+        
         self._elapsed_steps += 1
 
         if self.save_trajectory:
@@ -190,7 +194,7 @@ class RecordEpisode(gym.Wrapper):
             self._episode_info["info"] = info
 
         if self.save_video:
-            image = self.env.render(self.render_mode)
+            image = self.env.render(self.bk_render_mode)
 
             if self.info_on_video:
                 # scalar_info = extract_scalars_from_info(info)

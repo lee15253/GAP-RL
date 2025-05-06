@@ -9,8 +9,13 @@
             "type": "python",
             "request": "launch",
             // "program": "/home/nas2_userI/byungkunlee/research/rl/GAP-RL/gap_rl/examples/test_env_trajs.py",
-            // "program": "/home/nas2_userI/byungkunlee/research/rl/GAP-RL/gap_rl/algorithms/scripts/sac_train.py",
-            "program": "/home/nas2_userI/byungkunlee/research/rl/GAP-RL/gap_rl/sim2real/sim2real_traj_following_test.py",
+
+            "program": "/home/nas2_userI/byungkunlee/research/rl/GAP-RL/gap_rl/algorithms/scripts/sac_train.py",
+            // "program": "/home/nas2_userI/byungkunlee/research/rl/GAP-RL/gap_rl/algorithms/scripts/sac_LoG_dynamic_eval.py",
+
+
+            // "program": "/home/nas2_userI/byungkunlee/research/rl/GAP-RL/gap_rl/sim2real/sim2real_traj_following_test.py",
+
             // "program": "/home/nas2_userI/byungkunlee/research/rl/GAP-RL/gap_rl/localgrasp/test.py",
 
             "console": "integratedTerminal",
@@ -18,12 +23,20 @@
             "env" :{
                 // "DISPLAY": "",
                 // "VK_ICD_FILENAMES": "/usr/share/vulkan/icd.d/nvidia_icd.json",
-                "CUDA_VISIBLE_DEVICES":"7", 
+                "CUDA_VISIBLE_DEVICES":"5", 
+                // "VK_LOADER_DEVICE_SELECT": "5",
                 // "HYDRA_FULL_ERROR":"0",
                 // "MUJOCO_EGL_DEVICE_ID":"0",
             },
             "args" : [
                 "--config-name", "egopoints_ur85_bezier2d_goalaux",
+
+                // "--eval-datasets", "ycb_train", "ycb_eval", "graspnet_eval", "acronym_eval",
+                // "--gen-traj-modes", "bezier2d",
+                // "--seeds", "1",
+                // "--obs-mode", "state_egopoints",
+                // "--save-video"
+
             ]
         }
     ]
