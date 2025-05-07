@@ -80,7 +80,8 @@ def main(cfg: DictConfig):
     env_id = env_cfg["ycb_train"]["env_id"]
     model_ids = env_cfg["ycb_train"]["model_ids"]
 
-    seed = np.random.RandomState().randint(2**32)
+    # seed = np.random.RandomState().randint(2**32)
+    seed = cfg.get("seed", 1)
     print("experiment random seed: ", seed)
     setup_seed(seed)
 

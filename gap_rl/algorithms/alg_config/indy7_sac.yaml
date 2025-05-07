@@ -11,6 +11,7 @@ train_procs: 16
 device: cuda:0
 group_name: test
 exp_name: test
+seed: 1
 
 robot:
   group_name: ${group_name}
