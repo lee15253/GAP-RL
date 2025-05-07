@@ -66,8 +66,8 @@ def main(cfg: DictConfig):
     robot_cfg = cfg.robot
     alg_cfg = cfg.alg 
 
-    is_goal_aux = cfg.get("goal_aux", False)
-    share_feat = cfg.get("share_feat", True)
+    is_goal_aux = robot_cfg.get("goal_aux", False)
+    share_feat = robot_cfg.get("share_feat", True)
 
 
     # # FIXME: 디버깅
