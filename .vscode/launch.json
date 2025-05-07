@@ -29,10 +29,14 @@
                 // "MUJOCO_EGL_DEVICE_ID":"0",
             },
             "args" : [
-                // "--config-name", "egopoints_ur85_bezier2d_goalaux",
-                "--config-name", "egopoints_indy85_bezier2d_goalaux",
-                "--group_name", "abcdcd",
-                "--exp_name", "sdfsdf"
+                // "--config-name", "ur85_sac",
+                "--config-name", "indy7_sac",
+                "alg.batch_size=123",
+                "train_procs=1",
+
+                
+                // "--group_name", "abcdcd",
+                // "--exp_name", "sdfsdf"
 
 
                 // "--render",

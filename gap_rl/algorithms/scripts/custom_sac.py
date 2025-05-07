@@ -445,6 +445,11 @@ class CustomSAC(SAC):
         if self.target_entropy == "auto":
             # automatically set target entropy if needed
             self.target_entropy = -np.prod(self.env.action_space.shape).astype(np.float32)
+        elif self.target_entropy == "auto_half":
+            # automatically set target entropy if needed
+            self.target_entropy = (-np.prod(self.env.action_space.shape).astype(np.float32)) / 2
+
+
         else:
             # Force conversion
             # this will also throw an error for unexpected string

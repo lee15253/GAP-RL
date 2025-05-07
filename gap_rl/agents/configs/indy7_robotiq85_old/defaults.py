@@ -80,8 +80,8 @@ class Indy7Robotiq85oldDefaultConfig:
             self.rot_euler_bound,
             stiffness=100.0,
             damping=20.0,
-            # force_limit=[431.97, 431.97, 197.23, 79.79, 79.79, 79.79],
-            force_limit=100.0,
+            force_limit=[431.97, 431.97, 197.23, 79.79, 79.79, 79.79],
+            # force_limit=100.0,
             cache_size=3,  # smooth action cache size
             frame="ee",
             smooth=False,  # smooth action or not
