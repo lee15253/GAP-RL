@@ -31,6 +31,9 @@
             "args" : [
                 // "--config-name", "egopoints_ur85_bezier2d_goalaux",
                 "--config-name", "egopoints_indy85_bezier2d_goalaux",
+                "--group_name", "abcdcd",
+                "--exp_name", "sdfsdf"
+
 
                 // "--render",
                 // "--eval-datasets", "ycb_train", "ycb_eval", "graspnet_eval", "acronym_eval",

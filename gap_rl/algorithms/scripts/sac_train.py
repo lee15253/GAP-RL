@@ -50,6 +50,10 @@ if __name__ == "__main__":
     parser.add_argument("--timestamp", type=str, default=None, help="exp time stamp.")
     parser.add_argument("--distill", action='store_true')
 
+    parser.add_argument("--group_name", type=str, default="test", help="wandb group name.")
+    parser.add_argument("--exp_name", type=str, default="test", help="wandb experiment name.")
+
+
     args = parser.parse_args()
 
     config_file = ALGORITHM_DIR / f"config/{args.config_name}.yaml"
@@ -160,8 +164,10 @@ if __name__ == "__main__":
     # FIXME: 디버깅중
     checkpoint_callback = CheckpointCallback(save_freq=2500, save_path=log_dir)
     # callback = CallbackList([checkpoint_callback])
-
+ 
     # 1) wandb init
+    cfg['group_name'] = args.group_name
+    cfg['exp_name'] = args.exp_name
     wandb.init(
         project="gap-rl",
         name=f"{time_stamp}_sac_{cfg['obs_mode']}_{exp_suffix}",
