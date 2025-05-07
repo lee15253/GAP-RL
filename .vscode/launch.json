@@ -29,7 +29,8 @@
                 // "MUJOCO_EGL_DEVICE_ID":"0",
             },
             "args" : [
-                "--config-name", "egopoints_ur85_bezier2d_goalaux",
+                // "--config-name", "egopoints_ur85_bezier2d_goalaux",
+                "--config-name", "egopoints_indy85_bezier2d_goalaux",
 
                 // "--eval-datasets", "ycb_train", "ycb_eval", "graspnet_eval", "acronym_eval",
                 // "--gen-traj-modes", "bezier2d",
