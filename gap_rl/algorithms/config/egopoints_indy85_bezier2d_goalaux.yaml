@@ -2,10 +2,10 @@ device: cuda:0
 max_steps: 100
 test_num: 20
 eval_steps: [2000000]
-train_procs: 4
+train_procs: 16 # 4
 eval_procs: 1
 
-robot_id: indy_robotiq85_old
+robot_id: indy7_robotiq85_old
 robot_init_qpos_noise: 0.05
 shader_dir: ibl
 num_grasps: 40

@@ -471,16 +471,17 @@
     <axis   xyz="0.45 1.7 0"/>
     <limit  lower="0" upper="0.044" effort="1000" velocity="2.0"/>
   </joint>
-  <!-- finger tip 고정조인트(mimic joint 대신 fixed로 단순화) -->
-  <joint name="robotiq_85_left_knuckle_joint" type="fixed">
-    <parent link="robotiq_arg2f_base_link"/>
-    <child  link="robotiq_85_left_knuckle_link"/>
-    <origin rpy="3.1416 0 0" xyz="0.0549 0.0306 0"/>
+  <joint name="robotiq_2f_85_left_pad_joint" type="fixed">
+    <origin rpy="0 0 0" xyz="-0.025 -0.005 0"/>
+    <parent link="left_inner_finger_pad"/>
+    <child link="robotiq_85_left_finger_tip_link"/>
+    <axis xyz="0 0 1"/>
   </joint>
-  <joint name="robotiq_85_right_knuckle_joint" type="fixed">
-    <parent link="robotiq_arg2f_base_link"/>
-    <child  link="robotiq_85_right_knuckle_link"/>
-    <origin rpy="0 0 0"     xyz="0.0549 -0.0306 0"/>
+  <joint name="robotiq_2f_85_right_pad_joint" type="fixed">
+    <origin rpy="0 0 0" xyz="-0.025 -0.005 0"/>
+    <parent link="right_inner_finger_pad"/>
+    <child link="robotiq_85_right_finger_tip_link"/>
+    <axis xyz="0 0 1"/>
   </joint>
 
   <joint name="robotiq_85_left_knuckle_joint" type="fixed">
@@ -488,6 +489,15 @@
     <child link="robotiq_85_left_knuckle_link"/>
     <axis xyz="0 0 1"/>
     <origin rpy="3.14 0.0 0.0" xyz="0.05490451627 0.03060114443 0.0"/>
+<!--    <limit lower="0.0" upper="0.8" velocity="2.0" effort="10"/>-->
+<!--    <mimic joint="finger_joint" multiplier="-1" offset="0"/>-->
+  </joint>
+
+  <joint name="robotiq_85_left_finger_joint" type="fixed">
+    <parent link="robotiq_85_left_knuckle_link"/>
+    <child link="robotiq_85_left_finger_link"/>
+    <axis xyz="0 0 1"/>
+    <origin xyz="-0.00408552455 -0.03148604435 0.0" rpy="0 0 0" />
   </joint>
 
   <joint name="robotiq_85_left_inner_knuckle_joint" type="fixed">
@@ -522,7 +532,6 @@
 <!--    <limit lower="0" upper="0.8" velocity="2.0" effort="10" />-->
 <!--    <mimic joint="finger_joint" multiplier="-1" offset="0"/>-->
   </joint>
-
 
 <!-- GPT가 짜줌. ur5e_robotiq85_old를 바탕으로 -->
 <!-- 1) Frame coincident with TCP origin that your controller expects -->

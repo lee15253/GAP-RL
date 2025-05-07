@@ -4,7 +4,8 @@ import numpy as np
 import sapien.core as sapien
 from gap_rl import DESCRIPTION_DIR
 from gap_rl.agents.base_agent import BaseAgent, parse_urdf_config
-from gap_rl.agents.configs.ur5e_robotiq85_old import defaults
+# from gap_rl.agents.configs.ur5e_robotiq85_old import defaults
+from gap_rl.agents.configs.indy7_robotiq85_old import defaults
 from gap_rl.utils.common import compute_angle_between
 from gap_rl.utils.geometry import transform_points
 from gap_rl.utils.sapien_utils import (
@@ -15,12 +16,12 @@ from gap_rl.utils.sapien_utils import (
 from gap_rl.utils.trimesh_utils import get_actor_mesh
 
 
-class UR5e_Robotiq85_old(BaseAgent):
-    _config: defaults.UR5eRobotiq85oldDefaultConfig
+class Indy7_Robotiq85_old(BaseAgent):
+    _config: defaults.Indy7Robotiq85oldDefaultConfig
 
     @classmethod
     def get_default_config(cls):
-        return defaults.UR5eRobotiq85oldDefaultConfig()
+        return defaults.Indy7Robotiq85oldDefaultConfig()
 
     def _after_init(self):
         self.finger1_link: sapien.LinkBase = get_entity_by_name(
@@ -125,7 +126,8 @@ class UR5e_Robotiq85_old(BaseAgent):
         self.robot_collision_actors = [actor for actor in self.robot.get_links() if not actor.get_collision_shapes() == []]
         active_joint_name = [joint.get_name() for joint in self.robot.get_active_joints()]
         self.gripper_joint_ids = [active_joint_name.index(joint_name) for joint_name in self.config.gripper_joint_names]
-        self.agent_link_names = ['base_link', 'shoulder_link', 'upper_arm_link', 'forearm_link', 'wrist_1_link', 'wrist_2_link', 'wrist_3_link', 'ee_link']
+        # self.agent_link_names = ['base_link', 'shoulder_link', 'upper_arm_link', 'forearm_link', 'wrist_1_link', 'wrist_2_link', 'wrist_3_link', 'ee_link']
+        self.agent_link_names = ['link0', 'link1', 'link2', 'link3', 'link4', 'link5', 'link6', 'tcp']
         self.handcam_link_names = ['camera_hand_color_frame', 'camera_hand_link', 'camera_hand_color_optical_frame', 'camera_hand_depth_optical_frame']
         self.gripper_link_names = [
             'robotiq_arg2f_base_link', 'robotiq_85_left_knuckle_link',  'robotiq_85_left_inner_knuckle_link', 'robotiq_85_left_finger_link',

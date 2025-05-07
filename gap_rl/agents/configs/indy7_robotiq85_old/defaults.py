@@ -4,24 +4,33 @@ from gap_rl.sensors.camera import CameraConfig
 from gap_rl.sensors.depth_camera import StereoDepthCameraConfig
 
 
-class IndyRobotiq85oldDefaultConfig:
+class Indy7Robotiq85oldDefaultConfig:
     def __init__(self) -> None:
-        self.urdf_path = f"{DESCRIPTION_DIR}/ur5e/indy_robotiq85_old.urdf"
+        self.urdf_path = f"{DESCRIPTION_DIR}/indy7/indy_robotiq85_old.urdf"
         self.urdf_config = {}
 
         self.arm_joint_names = [
-            "shoulder_pan_joint",
-            "shoulder_lift_joint",
-            "elbow_joint",
-            "wrist_1_joint",
-            "wrist_2_joint",
-            "wrist_3_joint",
+            "joint0",
+            "joint1",
+            "joint2",
+            "joint3",
+            "joint4",
+            "joint5",
+            # "tcp"
+            
+            # "shoulder_pan_joint",
+            # "shoulder_lift_joint",
+            # "elbow_joint",
+            # "wrist_1_joint",
+            # "wrist_2_joint",
+            # "wrist_3_joint",
         ]
-        self.arm_stiffness = 1000  # 1e3
-        self.arm_damping = 50  # 1e2
-        self.arm_force_limit = 100
-        self.arm_delta = 0.04  # 0.05 rad/(control step)
-        self.arm_vel_delta = 0.2  # 0.2 rad/s
+        # self.arm_stiffness = 100  # 1000
+        # self.arm_damping = 20  # 50
+        # self.arm_force_limit = 100  # TODO: 그냥 이걸로 고정
+        # # TODO: 아래것들은 어디에 쓰는거지?
+        # self.arm_delta = 0.04  # 0.05 rad/(control step)
+        # self.arm_vel_delta = 0.2  # 0.2 rad/s
 
         self.gripper_joint_names = [
             "robotiq_2f_85_left_driver_joint",
@@ -42,33 +51,37 @@ class IndyRobotiq85oldDefaultConfig:
         # Arm
         # -------------------------------------------------------------------------- #
         # PD ee position
-        arm_pd_ee_delta_pos = PDEEPosControllerConfig(
-            self.arm_joint_names,
-            -self.ee_delta,
-            self.ee_delta,
-            stiffness=self.arm_stiffness,
-            damping=self.arm_damping,
-            force_limit=self.arm_force_limit,
-            ee_link=self.ee_link_name,
-        )
-        arm_pd_ee_delta_pose = PDEEPoseControllerConfig(
-            self.arm_joint_names,
-            -self.ee_delta,
-            self.ee_delta,
-            self.rot_bound,
-            stiffness=self.arm_stiffness,
-            damping=self.arm_damping,
-            force_limit=self.arm_force_limit,
-            ee_link=self.ee_link_name,
-        )
+        # 안씀
+        # arm_pd_ee_delta_pos = PDEEPosControllerConfig(
+        #     self.arm_joint_names,
+        #     -self.ee_delta,
+        #     self.ee_delta,
+        #     stiffness=self.arm_stiffness,
+        #     damping=self.arm_damping,
+        #     force_limit=self.arm_force_limit,
+        #     ee_link=self.ee_link_name,
+        # )
+        # 안씀
+        # arm_pd_ee_delta_pose = PDEEPoseControllerConfig(
+        #     self.arm_joint_names,
+        #     -self.ee_delta,
+        #     self.ee_delta,
+        #     self.rot_bound,
+        #     stiffness=self.arm_stiffness,
+        #     damping=self.arm_damping,
+        #     force_limit=self.arm_force_limit,
+        #     ee_link=self.ee_link_name,
+        # )
+
         arm_pd_ee_delta_pose_euler = PDEEPoseEulerControllerConfig(
             self.arm_joint_names,
             -self.ee_delta,
             self.ee_delta,
             self.rot_euler_bound,
-            stiffness=self.arm_stiffness,
-            damping=self.arm_damping,
-            force_limit=self.arm_force_limit,
+            stiffness=100.0,
+            damping=20.0,
+            # force_limit=[431.97, 431.97, 197.23, 79.79, 79.79, 79.79],
+            force_limit=100.0,
             cache_size=3,  # smooth action cache size
             frame="ee",
             smooth=False,  # smooth action or not
@@ -92,12 +105,13 @@ class IndyRobotiq85oldDefaultConfig:
         )
 
         controller_configs = dict(
-            pd_ee_delta_pos=dict(arm=arm_pd_ee_delta_pos, gripper=gripper_pd_joint_pos),
-            pd_ee_delta_pose=dict(
-                arm=arm_pd_ee_delta_pose, gripper=gripper_pd_joint_pos
-            ),
+            # pd_ee_delta_pos=dict(arm=arm_pd_ee_delta_pos, gripper=gripper_pd_joint_pos),
+            # pd_ee_delta_pose=dict(
+            #     arm=arm_pd_ee_delta_pose, gripper=gripper_pd_joint_pos
+            # ),
             pd_ee_delta_pose_euler=dict(
-                arm=arm_pd_ee_delta_pose_euler, gripper=gripper_pd_joint_pos
+                arm=arm_pd_ee_delta_pose_euler, 
+                gripper=gripper_pd_joint_pos
             )
         )
 

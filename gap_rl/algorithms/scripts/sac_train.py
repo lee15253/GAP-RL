@@ -8,6 +8,7 @@ import torch
 from tqdm import tqdm
 import matplotlib.pyplot as plt
 from collections import defaultdict
+import wandb
 
 from gap_rl import ALGORITHM_DIR, RLMODEL_DIR
 from gap_rl.envs import *
@@ -25,7 +26,8 @@ from custom_sac import CustomSAC
 
 from stable_baselines3 import SAC
 from stable_baselines3.common.torch_layers import BaseFeaturesExtractor
-from stable_baselines3.common.callbacks import CheckpointCallback
+from stable_baselines3.common.callbacks import CheckpointCallback, CallbackList
+from wandb.integration.sb3 import WandbCallback
 from stable_baselines3.common.logger import configure
 from stable_baselines3.common.vec_env import SubprocVecEnv, VecMonitor
 
@@ -56,8 +58,9 @@ if __name__ == "__main__":
     is_goal_aux = cfg.get("goal_aux", False)
     share_feat = cfg.get("share_feat", True)
 
-    # FIXME: 디버깅
-    cfg['train_procs'] = 1
+
+    # # FIXME: 디버깅
+    # cfg['train_procs'] = 1
 
 
     env_cfg_file = ALGORITHM_DIR / f"config/env_settings.yaml"
@@ -85,74 +88,93 @@ if __name__ == "__main__":
 
 
 
-    from stable_baselines3.common.vec_env import DummyVecEnv
-    env = sb3_make_multienv(
-        env_id=env_id,
-        robot_id=cfg["robot_id"],
-        robot_init_qpos_noise=cfg["robot_init_qpos_noise"],
-        shader_dir=cfg["shader_dir"],
-        model_ids=model_ids,
-        num_grasps=cfg["num_grasps"],
-        num_grasp_points=cfg["num_grasp_points"],
-        grasp_points_mode=cfg["grasp_points_mode"],
-        obj_init_rot_z=cfg["obj_init_rot_z"],
-        obj_init_rot=cfg["obj_init_rot"],
-        goal_thresh=cfg["goal_thresh"],
-        robot_x_offset=cfg["robot_x_offset"],
-        gen_traj_mode=cfg["gen_traj_mode"],
-        vary_speed=cfg["vary_speed"],
-        grasp_select_mode=cfg["grasp_select_mode"],
-        obs_mode=cfg["obs_mode"],
-        control_mode=cfg["control_mode"],
-        reward_mode=cfg["reward_mode"],
-        sim_freq=cfg["sim_freq"],
-        control_freq=cfg["control_freq"],
-        device=cfg["device"],
-        rank=0,
-        seed=seed,
-    )
-
-    vec_env = DummyVecEnv([env])
-
-
-    # vec_env = SubprocVecEnv(
-    #     [
-    #         sb3_make_multienv(
-    #             env_id=env_id,
-    #             robot_id=cfg["robot_id"],
-    #             robot_init_qpos_noise=cfg["robot_init_qpos_noise"],
-    #             shader_dir=cfg["shader_dir"],
-    #             model_ids=model_ids,
-    #             num_grasps=cfg["num_grasps"],
-    #             num_grasp_points=cfg["num_grasp_points"],
-    #             grasp_points_mode=cfg["grasp_points_mode"],
-    #             obj_init_rot_z=cfg["obj_init_rot_z"],
-    #             obj_init_rot=cfg["obj_init_rot"],
-    #             goal_thresh=cfg["goal_thresh"],
-    #             robot_x_offset=cfg["robot_x_offset"],
-    #             gen_traj_mode=cfg["gen_traj_mode"],
-    #             vary_speed=cfg["vary_speed"],
-    #             grasp_select_mode=cfg["grasp_select_mode"],
-    #             obs_mode=cfg["obs_mode"],
-    #             control_mode=cfg["control_mode"],
-    #             reward_mode=cfg["reward_mode"],
-    #             sim_freq=cfg["sim_freq"],
-    #             control_freq=cfg["control_freq"],
-    #             device=cfg["device"],
-    #             rank=i,
-    #             seed=seed,
-    #         )
-    #         for i in range(cfg["train_procs"])
-    #     ],
-    #     start_method="spawn",
+    # from stable_baselines3.common.vec_env import DummyVecEnv
+    # env = sb3_make_multienv(
+    #     env_id=env_id,
+    #     robot_id=cfg["robot_id"],
+    #     robot_init_qpos_noise=cfg["robot_init_qpos_noise"],
+    #     shader_dir=cfg["shader_dir"],
+    #     model_ids=model_ids,
+    #     num_grasps=cfg["num_grasps"],
+    #     num_grasp_points=cfg["num_grasp_points"],
+    #     grasp_points_mode=cfg["grasp_points_mode"],
+    #     obj_init_rot_z=cfg["obj_init_rot_z"],
+    #     obj_init_rot=cfg["obj_init_rot"],
+    #     goal_thresh=cfg["goal_thresh"],
+    #     robot_x_offset=cfg["robot_x_offset"],
+    #     gen_traj_mode=cfg["gen_traj_mode"],
+    #     vary_speed=cfg["vary_speed"],
+    #     grasp_select_mode=cfg["grasp_select_mode"],
+    #     obs_mode=cfg["obs_mode"],
+    #     control_mode=cfg["control_mode"],
+    #     reward_mode=cfg["reward_mode"],
+    #     sim_freq=cfg["sim_freq"],
+    #     control_freq=cfg["control_freq"],
+    #     device=cfg["device"],
+    #     rank=0,
+    #     seed=seed,
     # )
+
+    # vec_env = DummyVecEnv([env])
+
+
+    vec_env = SubprocVecEnv(
+        [
+            sb3_make_multienv(
+                env_id=env_id,
+                robot_id=cfg["robot_id"],
+                robot_init_qpos_noise=cfg["robot_init_qpos_noise"],
+                shader_dir=cfg["shader_dir"],
+                model_ids=model_ids,
+                num_grasps=cfg["num_grasps"],
+                num_grasp_points=cfg["num_grasp_points"],
+                grasp_points_mode=cfg["grasp_points_mode"],
+                obj_init_rot_z=cfg["obj_init_rot_z"],
+                obj_init_rot=cfg["obj_init_rot"],
+                goal_thresh=cfg["goal_thresh"],
+                robot_x_offset=cfg["robot_x_offset"],
+                gen_traj_mode=cfg["gen_traj_mode"],
+                vary_speed=cfg["vary_speed"],
+                grasp_select_mode=cfg["grasp_select_mode"],
+                obs_mode=cfg["obs_mode"],
+                control_mode=cfg["control_mode"],
+                reward_mode=cfg["reward_mode"],
+                sim_freq=cfg["sim_freq"],
+                control_freq=cfg["control_freq"],
+                device=cfg["device"],
+                rank=i,
+                seed=seed,
+            )
+            for i in range(cfg["train_procs"])
+        ],
+        start_method="spawn",
+    )
     vec_env = VecMonitor(vec_env, log_dir)
 
     for obs_key, box_space in vec_env.observation_space.items():
         print(f"{obs_key}: {box_space.shape} ")
     print("Action Space: ", vec_env.action_space)
+
     # setup callbacks
-    checkpoint_callback = CheckpointCallback(save_freq=400000 // cfg.get("train_procs", 1), save_path=log_dir)
+    # checkpoint_callback = CheckpointCallback(save_freq=400000 // cfg.get("train_procs", 1), save_path=log_dir)
+    # FIXME: 디버깅중
+    checkpoint_callback = CheckpointCallback(save_freq=2500, save_path=log_dir)
+    # callback = CallbackList([checkpoint_callback])
+
+    # 1) wandb init
+    wandb.init(
+        project="gap-rl",
+        name=f"{time_stamp}_sac_{cfg['obs_mode']}_{exp_suffix}",
+        config=cfg,
+        sync_tensorboard=True,  # auto-upload sb3's tensorboard metrics
+    )
+    wandb_callback = WandbCallback(
+        # 모델 체크포인트도 wandb에 업로드
+        model_save_path=os.path.join(log_dir, "wandb_models"),
+        verbose=2,
+    )
+    callback = CallbackList([checkpoint_callback, wandb_callback])
+
     # set up logger
     new_logger = configure(log_dir, ["stdout", "csv", "log", "tensorboard"])
 
@@ -215,7 +237,8 @@ if __name__ == "__main__":
     model.set_logger(new_logger)
     model.learn(
         total_timesteps=5_000_000,
-        callback=[checkpoint_callback],
+        # callback=[checkpoint_callback],
+        callback=callback,
     )
     # model.save_replay_buffer(log_dir + "/sac_replay_buffer")
 

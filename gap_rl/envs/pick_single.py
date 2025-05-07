@@ -10,6 +10,7 @@ import sapien.core as sapien
 from gap_rl import ASSET_DIR, format_path
 from gap_rl.agents.base_agent import BaseAgent
 from gap_rl.agents.robots.ur5e_robotiq85_old import UR5e_Robotiq85_old
+from gap_rl.agents.robots.indy7_robotiq85_old import Indy7_Robotiq85_old
 from gap_rl.sensors.camera import CameraConfig
 from gap_rl.utils.common import (
     convert_np_bool_to_float,
@@ -75,6 +76,7 @@ class PickSingleEnv(BaseEnv):
     SUPPORTED_REWARD_MODES = ("dense", "sparse")
     SUPPORTED_ROBOTS = {
         "ur5e_robotiq85_old": UR5e_Robotiq85_old,
+        "indy7_robotiq85_old": Indy7_Robotiq85_old,
     }
     agent: Union[UR5e_Robotiq85_old]
 
@@ -285,13 +287,20 @@ class PickSingleEnv(BaseEnv):
             self.agent.reset(qpos)
             self.agent.robot.set_pose(Pose())
             self.agent._add_constraints()
+        elif self.robot_uid == "indy7_robotiq85_old":
+            pass
         elif self.robot_uid in ["ur5e_robotiq140_old", "ur5e_robotiq85_old"]:
             pass
         else:
             raise NotImplementedError(self.robot_uid)
+        
+
+
         if self.robot_uid == "panda" or self.robot_uid == "xmate3_robotiq":
             self.num_joints = 7
         elif self.robot_uid in ["ur5e_robotiq140", "ur5e_robotiq140_old", "ur5e_robotiq85", "ur5e_robotiq85_old"]:
+            self.num_joints = 6
+        elif self.robot_uid == "indy7_robotiq85_old":
             self.num_joints = 6
         else:
             raise NotImplementedError
@@ -467,6 +476,19 @@ class PickSingleEnv(BaseEnv):
             )
             self.agent.reset(qpos)
             self.agent.robot.set_pose(Pose())
+        elif self.robot_uid == "indy7_robotiq85_old":
+            # qpos = np.array(
+            #     [-1.27, -0.9, -1.6, -1.7, 1.4, -2.7, 0, 0]  # top-down view
+            # )
+            qpos = np.array(
+                [0.5, 0.0, -1.0, 0.0, -1.7, 0.0, 0, 0]  # top-down view
+            )
+            qpos[:-2] += self._episode_rng.normal(
+                0, self.robot_init_qpos_noise, len(qpos) - 2
+            )
+            self.agent.reset(qpos)
+            self.agent.robot.set_pose(Pose())
+
         else:
             raise NotImplementedError(self.robot_uid)
         self._get_cam_info(cam_name="hand_realsense")
@@ -1270,7 +1292,8 @@ class PickSingleEnv(BaseEnv):
     def render(self, mode="human", view_workspace=True, view_traj=True, view_grasps=True, view_obj_bbdx=False):
         # _view_grasps => compute near grasps 40개 후보군
         # _view_anno_grasps => 내 로봇의 gripper (빨강) + GraspNet의 저 object의 것 중 현재 내 gripper와 가장가까운 놈 (노랑)
-        # _view_pred_grasp / _view_obj_bbdx => 안들어가져서 모르겠음
+        # _view_pred_grasp => actor의 pred_grasp (초록), critc의 pred_grasp (파랑)
+        #  _view_obj_bbdx => 안들어가져서 모르겠음
         # _view_grasps => compute_near_grasps (40개 후보군)
         
         
@@ -1312,8 +1335,8 @@ class PickSingleEnv(BaseEnv):
         if view_traj:
             self._remove_lineset(traj)
         if view_grasps and self.obs_mode in ['state_grasp9d', 'state_egopoints', 'state_egopoints_rt', 'state_grasp9d_rt']:
-            # if self.pred_grasp_actor_critic is not None:
-            #     self._remove_lineset(grasp_pred)
+            if self.pred_grasp_actor_critic is not None:
+                self._remove_lineset(grasp_pred)
             if self.grasps_mat is not None:
                 self._remove_lineset(grasp_anno)
             self._remove_lineset(grasps)

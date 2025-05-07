@@ -117,9 +117,23 @@ if __name__ == "__main__":
 
         # log_path = "20240307_174224_sac4_state_egopoints_pd_ee_delta_pose_euler_YCB12_40_bezier2d_vary_nearest"
         # log_path = glob.glob(f"{args.timestamp}*")[0]
-        log_path = '20250502_181643_sac1_state_egopoints_pd_ee_delta_pose_euler_YCB12_40_bezier2d_vary_None'
-        
-        config_file = ALGORITHM_DIR / f"scripts/{log_path}/config.yaml"
+
+        # log_path = '20250502_181643_sac1_state_egopoints_pd_ee_delta_pose_euler_YCB12_40_bezier2d_vary_None'
+        # model_path = f"/home/nrmk/projects/GAP-RL/gap_rl/algorithms/scripts/20250502_181643_sac1_state_egopoints_pd_ee_delta_pose_euler_YCB12_40_bezier2d_vary_None/rl_model_3600000_steps"
+
+        # log_path = '20250507_101314_sac1_state_egopoints_pd_ee_delta_pose_euler_YCB12_40_bezier2d_vary_None'
+        # model_path = f'/home/nrmk/projects/GAP-RL/gap_rl/algorithms/scripts/20250507_101314_sac1_state_egopoints_pd_ee_delta_pose_euler_YCB12_40_bezier2d_vary_None/rl_model_1000_steps'
+
+        log_path = '/home/nrmk/projects/GAP-RL/20250507_112731_sac16_state_egopoints_pd_ee_delta_pose_euler_YCB12_40_bezier2d_vary_None'
+        model_path = f'{log_path}/rl_model_160000_steps'
+
+        # log_path = '/home/nrmk/projects/GAP-RL/20250507_134839_sac16_state_egopoints_pd_ee_delta_pose_euler_YCB12_40_bezier2d_vary_None'
+        # model_path = f'{log_path}/rl_model_160000_steps'
+                
+                
+
+        # config_file = ALGORITHM_DIR / f"scripts/{log_path}/config.yaml"
+        config_file = f'{log_path}/config.yaml'
         with open(config_file, 'r', encoding='utf-8') as fin:
             cfg = yaml.load(fin, Loader=yaml.FullLoader)
         env_cfg_file = ALGORITHM_DIR / f"config/env_settings.yaml"
@@ -188,8 +202,6 @@ if __name__ == "__main__":
                     clean_on_close=True,
                 )
                 # Note: load RL model, it will change record._main_seed
-                # model_path = f"{log_path}/rl_model_2000000_steps"
-                model_path = f"/home/nas2_userI/byungkunlee/research/rl/GAP-RL/gap_rl/algorithms/scripts/20250502_181643_sac1_state_egopoints_pd_ee_delta_pose_euler_YCB12_40_bezier2d_vary_None/rl_model_3600000_steps"
                 rl_model = SAC.load(model_path,
                                     env=record_env,
                                     print_system_info=True
